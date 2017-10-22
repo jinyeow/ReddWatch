@@ -1,8 +1,10 @@
 # RedditWatcher
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/reddit_watcher`. To experiment with that code, run `bin/console` for an interactive prompt.
+RedditWatcher notifies you when there are new Posts from Subreddits that you choose.
 
-TODO: Delete this and the text above, and describe your gem
+Create a list of subreddits and RedditWatcher will periodically scan /new of those
+subreddits to check for new posts. RW will then display a desktop notification to
+alert you of the new post.
 
 ## Installation
 
@@ -23,6 +25,9 @@ Or install it yourself as:
 ## Usage
 
 TODO: Write usage instructions here
+e.g. reddit_watcher --subscribe worldnews // adds r/worldnews to list of subreddits to watch
+     reddit_watcher --list-subreddits // lists subscribed subreddits
+     reddit_watcher --add-keywords // adds keywords that will create a 'critical' notification.
 
 ## Development
 
