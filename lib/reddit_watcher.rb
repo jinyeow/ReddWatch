@@ -19,16 +19,29 @@ module RedditWatcher
     secret:    ENV['CLIENT_SECRET']
   )
 
+  appname   = 'RedditWatcher'
+  subreddit = 'ruby'
+
   # Get new posts from subreddit
-  new = session.subreddit('ruby').new
+  new = session.subreddit(subreddit).new
   posts = new.children
 
-  # Send desktop notification
+  # Notification init
   GirFFI.setup :Notify
-  Notify.init("RedditWatcher")
+  Notify.init(appname)
+
+  # Send desktop notification
   Notify::Notification.new(
-    "RedditWatcher",
+    appname,
     "#{posts.first.title}: #{posts.first.url}",
     "dialog-info"
   ).show
+
+  posts.each do |post|
+    Notify::Notification.new(
+      "#{appname} - #{subreddit}",
+      "#{post.title}\n\n#{post.url}",
+      "dialog-info"
+    )
+  end
 end
