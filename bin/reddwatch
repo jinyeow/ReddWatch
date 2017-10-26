@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require 'reddwatch'
+require 'optparser'
+
+# NOTE: This is just placeholder code.
+# TODO: Actually implement this.
+
+opts = OptParser.parse
+
+Reddwatch.new(opts)

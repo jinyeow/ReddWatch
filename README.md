@@ -1,8 +1,8 @@
-# RedditWatcher
+# ReddWatch
 
-RedditWatcher notifies you when there are new Posts from Subreddits that you choose.
+ReddWatch notifies you when there are new Posts from Subreddits that you choose.
 
-Create a list of subreddits and RedditWatcher will periodically scan /new of those
+Create a list of subreddits and ReddWatch will periodically scan /new of those
 subreddits to check for new posts. RW will then display a desktop notification to
 alert you of the new post.
 
@@ -11,7 +11,7 @@ alert you of the new post.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'reddit_watcher'
+gem 'reddwatch'
 ```
 
 And then execute:
@@ -20,14 +20,14 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install reddit_watcher
+    $ gem install reddwatch
 
 ## Usage
 
 TODO: Write usage instructions here
-e.g. reddit_watcher --subscribe worldnews // adds r/worldnews to list of subreddits to watch
-     reddit_watcher --list-subreddits // lists subscribed subreddits
-     reddit_watcher --add-keywords // adds keywords that will create a 'critical' notification.
+e.g. reddwatch --subscribe worldnews // adds r/worldnews to list of subreddits to watch
+     reddwatch --list-subreddits // lists subscribed subreddits
+     reddwatch --add-keywords // adds keywords that will create a 'critical' notification.
 
 ## Development
 
@@ -37,7 +37,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/reddit_watcher.
+Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/reddwatch.
 
 ## License
 

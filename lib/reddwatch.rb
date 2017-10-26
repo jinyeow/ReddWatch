@@ -1,11 +1,11 @@
-require "reddit_watcher/version"
+require "reddwatch/version"
 
 require 'dotenv/load'
 
 require 'redd'
 require 'gir_ffi'
 
-module RedditWatcher
+module Reddwatch
   # Your code goes here...
   # see https://github.com/Inityx/robi for an example app.
 
