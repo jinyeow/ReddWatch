@@ -1,5 +1,6 @@
 # TODO
 
+0. Figure out if dependencies should go in gemspec of Gemfile??
 1. Add Guardfile
 2. add wrapper for Redd
 3. add executable to bin

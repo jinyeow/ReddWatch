@@ -5,12 +5,12 @@ require "reddwatch/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "reddwatch"
-  spec.version       = RedditWatcher::VERSION
+  spec.version       = Reddwatch::VERSION
   spec.authors       = ["jinyeow"]
   spec.email         = ["jin-yeow@outlook.com"]
 
   spec.summary       = %q{Watches subreddits and sends desktop notifications.}
-  # spec.description   = %q{TODO: Write a longer description or delete this line.}
+  spec.description   = %q{Watches subreddits and sends desktop notifications.}
   # spec.homepage      = "TODO: Put your gem's website or public repo URL here."
   spec.license       = "MIT"
 

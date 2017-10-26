@@ -19,7 +19,7 @@ module Reddwatch
     secret:    ENV['CLIENT_SECRET']
   )
 
-  appname   = 'RedditWatcher'
+  appname   = 'ReddWatch'
   subreddit = 'ruby'
 
   # Get new posts from subreddit
