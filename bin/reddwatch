@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
 
 require 'reddwatch'
-require 'optparser'
+require 'optparse'
 
 # NOTE: This is just placeholder code.
 # TODO: Actually implement this.
+# NOTE: Take a look at Slop and Drek instead of optparse
 
 opts = OptParser.parse
 
