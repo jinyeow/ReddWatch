@@ -1,12 +1,11 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
+require 'pp'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "/../lib"))
 require 'reddwatch'
 
-# NOTE: This is just placeholder code.
-# TODO: Actually implement this.
 # NOTE: Take a look at Slop and Drek instead of optparse
 
 opts = {}
@@ -14,27 +13,39 @@ opts = {}
 OptionParser.new do |o|
   o.banner = "USAGE: #{$PROGRAM_NAME} [options] [subreddit|multi|list]"
 
-  o.on("-l", "--list-watching", "List all subreddits in the current list.") do
+  o.on("--start", "Start Reddwatch in the background to watch subreddits and \
+      notify") do
+    Reddwatch.send(:start)
+  end
+
+  o.on("--list-watching", "List all subreddits in the current list.") do
     opts[:list] = true
   end
 
-  o.on("-s", "--subscribe [SUBREDDIT(,SUBREDDIT,SUBREDDIT)]", Array, \
+  o.on("-s", "--subscribe SUBREDDIT,SUBREDDIT,SUBREDDIT,...", Array, \
        "Subscribe to a subreddit to watch it.") do |s|
+    pp s
     opts[:subcribe] = s
   end
 
-  o.on("-u", "--unwatch [SUB,SUB,SUB]", Array, \
+  o.on("-u", "--unwatch SUBREDDIT,SUBREDDIT,SUBREDDIT,...", Array, \
        "Unsubscribe subreddit(s) and stop watching.") do |u|
     opts[:unwatch] = u
   end
 
-  o.on("-c", "--clear", "Clear all subreddits from the current list.") do
+  o.on("--clear", "Clear all subreddits from the current list.") do
     opts[:clear] = true
   end
 
   o.on_tail("-v", "--version", "Show version.") do |v|
     puts Reddwatch::VERSION
+    exit
+  end
+
+  o.on("-h", "--help", "Show this message.") do |h|
+    puts o
+    exit
   end
 end.parse!
 
-# Reddwatch.start(opts)
+Reddwatch.init(opts)
