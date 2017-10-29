@@ -1,12 +1,40 @@
 #!/usr/bin/env ruby
 
-require 'reddwatch'
 require 'optparse'
+
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "/../lib"))
+require 'reddwatch'
 
 # NOTE: This is just placeholder code.
 # TODO: Actually implement this.
 # NOTE: Take a look at Slop and Drek instead of optparse
 
-opts = OptParser.parse
+opts = {}
 
-Reddwatch.new(opts)
+OptionParser.new do |o|
+  o.banner = "USAGE: #{$PROGRAM_NAME} [options] [subreddit|multi|list]"
+
+  o.on("-l", "--list-watching", "List all subreddits in the current list.") do
+    opts[:list] = true
+  end
+
+  o.on("-s", "--subscribe [SUBREDDIT(,SUBREDDIT,SUBREDDIT)]", Array, \
+       "Subscribe to a subreddit to watch it.") do |s|
+    opts[:subcribe] = s
+  end
+
+  o.on("-u", "--unwatch [SUB,SUB,SUB]", Array, \
+       "Unsubscribe subreddit(s) and stop watching.") do |u|
+    opts[:unwatch] = u
+  end
+
+  o.on("-c", "--clear", "Clear all subreddits from the current list.") do
+    opts[:clear] = true
+  end
+
+  o.on_tail("-v", "--version", "Show version.") do |v|
+    puts Reddwatch::VERSION
+  end
+end.parse!
+
+# Reddwatch.start(opts)

@@ -6,15 +6,12 @@ require 'redd'
 require 'gir_ffi'
 
 module Reddwatch
-  # Your code goes here...
-  # see https://github.com/Inityx/robi for an example app.
 
   # NOTE: The following is only a rough outline of what I want the gem to do.
   # Needs to be run on a loop with more options.
-  # See TODO.md for more things to add.
 
   # Initialize Redd
-  Redd.it(
+  session = Redd.it(
     client_id: ENV['CLIENT_ID'],
     secret:    ENV['CLIENT_SECRET']
   )
@@ -37,11 +34,27 @@ module Reddwatch
     "dialog-info"
   ).show
 
-  posts.each do |post|
-    Notify::Notification.new(
-      "#{appname} - #{subreddit}",
-      "#{post.title}\n\n#{post.url}",
-      "dialog-info"
-    )
+  # posts.each do |post|
+  #   Notify::Notification.new(
+  #     "#{appname} - #{subreddit}",
+  #     "#{post.title}\n\n#{post.url}",
+  #     "dialog-info"
+  #   )
+  # end
+
+  #
+  # Main interface
+  #
+
+  def start
+  end
+
+  def stop
+  end
+
+  def status
+  end
+
+  def help
   end
 end
