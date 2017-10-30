@@ -6,17 +6,20 @@ require 'pp'
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "/../lib"))
 require 'reddwatch'
 
-# NOTE: Take a look at Slop and Drek instead of optparse
-
 opts = {}
 
 OptionParser.new do |o|
   o.banner = "USAGE: #{$PROGRAM_NAME} [options] [subreddit|multi|list]"
 
+  o.separator ""
+
   o.on("--start", "Start Reddwatch in the background to watch subreddits and \
-      notify") do
+      send desktop notifications.") do
     Reddwatch.send(:start)
   end
+
+  o.separator ""
+  o.separator "Options for Individual Lists:"
 
   o.on("--list-watching", "List all subreddits in the current list.") do
     opts[:list] = true
@@ -37,7 +40,9 @@ OptionParser.new do |o|
     opts[:clear] = true
   end
 
-  o.on_tail("-v", "--version", "Show version.") do |v|
+  o.separator ""
+
+  o.on_tail("-v", "--version", "Show version information.") do |v|
     puts Reddwatch::VERSION
     exit
   end
