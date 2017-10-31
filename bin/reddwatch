@@ -43,13 +43,13 @@ OptionParser.new do |o|
   o.separator ""
 
   o.on_tail("-v", "--version", "Show version information.") do |v|
-    puts Reddwatch::VERSION
-    exit
+    puts "Reddwatch v#{Reddwatch::VERSION}"
+    exit(0)
   end
 
   o.on("-h", "--help", "Show this message.") do |h|
     puts o
-    exit
+    exit(0)
   end
 end.parse!
 

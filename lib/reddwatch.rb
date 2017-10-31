@@ -8,7 +8,6 @@ require 'forwardable'
 require 'redd'
 require 'gir_ffi'
 
-# @see Reddwatch::ClassMethods
 module Reddwatch
   extend Forwardable
 

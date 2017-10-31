@@ -1,12 +1,12 @@
 # DESIGN
 
-## Reddwatch::Base (?)
+## Reddwatch::CommandLine (?)
 reddwatch start
 reddwatch stop
 reddwatch help|-h|--help
 reddwatch status (??)
 
-## Reddwatch::Client (?)
+## Reddwatch::Watcher/Client (?)
 reddwatch --list-lists
 reddwatch --create-list <LIST>
 reddwatch --watch-list <LIST>

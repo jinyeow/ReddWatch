@@ -39,4 +39,5 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency "redd", "~> 0.8"
   spec.add_runtime_dependency "gir_ffi", "~> 0.11"
+  spec.add_runtime_dependency "whenever"
 end
