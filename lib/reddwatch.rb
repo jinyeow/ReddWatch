@@ -8,8 +8,14 @@ require 'forwardable'
 require 'redd'
 require 'gir_ffi'
 
+require 'reddwatch/cli'
+require 'reddwatch/list'
+require 'reddwatch/notify/notifier'
+
 module Reddwatch
   extend Forwardable
+
+  DEFAULT_WATCH_LIST = 'default'
 
   # NOTE: The following is only a rough outline of what I want the gem to do.
   # Needs to be run on a loop with more options.

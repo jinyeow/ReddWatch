@@ -13,30 +13,54 @@ OptionParser.new do |o|
 
   o.separator ""
 
-  o.on("--start", "Start Reddwatch in the background to watch subreddits and \
-      send desktop notifications.") do
+  o.on("--start", "Start Reddwatch watcher.") do
     Reddwatch.send(:start)
   end
 
-  o.separator ""
-  o.separator "Options for Individual Lists:"
+  o.on("--stop", "Stop Reddwatch watcher.") do
+    Reddwatch.send(:stop)
+  end
 
-  o.on("--list-watching", "List all subreddits in the current list.") do
+  o.on("--status", "Print status of Reddwatch watcher to the terminal.") do
+    Reddwatch.send(:status)
+  end
+
+  o.separator ""
+
+  o.on("-L", "--list-lists", "List all created watch lists.") do
+    # List lists
+  end
+
+  o.on("-C", "--create-list NAME", "Create a new watch list.") do |c|
+    opts[:create] = c
+  end
+
+  o.on("-W", "--watch-list NAME", "Watch named list.") do |w|
+    opts[:watch] = w
+  end
+
+  o.on("-D", "--delete-list", "Delete named list.") do |d|
+    opts[:delete] = d
+  end
+
+  o.separator ""
+
+  o.on("-l", "--list-watching", "List all subreddits in the current list.") do
     opts[:list] = true
   end
 
-  o.on("-s", "--subscribe SUBREDDIT,SUBREDDIT,SUBREDDIT,...", Array, \
-       "Subscribe to a subreddit to watch it.") do |s|
+  o.on("-s", "--subscribe SUBREDDIT[,SUBREDDIT,SUBREDDIT,...]", Array, \
+       "Comma-separated list of subreddits to watch.") do |s|
     pp s
     opts[:subcribe] = s
   end
 
-  o.on("-u", "--unwatch SUBREDDIT,SUBREDDIT,SUBREDDIT,...", Array, \
-       "Unsubscribe subreddit(s) and stop watching.") do |u|
+  o.on("-u", "--unwatch SUBREDDIT[,SUBREDDIT,SUBREDDIT,...]", Array, \
+       "Comma-separated list of subreddits to stop watching.") do |u|
     opts[:unwatch] = u
   end
 
-  o.on("--clear", "Clear all subreddits from the current list.") do
+  o.on("-c", "--clear", "Clear all subreddits from the current list.") do
     opts[:clear] = true
   end
 
@@ -53,4 +77,4 @@ OptionParser.new do |o|
   end
 end.parse!
 
-Reddwatch.init(opts)
+Reddwatch::CLI.execute(opts)
