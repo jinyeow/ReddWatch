@@ -1,9 +1,9 @@
-require 'reddwatch'
-
 module Reddwatch
   class List
-    def init(opts)
+    def initialize(opts={})
       @name = opts[:name]
+
+      # load_list @name
       # @subs = Read.From.Persistent.Data
     end
 
@@ -26,5 +26,16 @@ module Reddwatch
     def clear
       # remove(@subs)
     end
+
+    private
+      def save_list
+      end
+
+      def load_list(name)
+      end
+
+      def parse_data(data)
+        # JSON
+      end
   end
 end
