@@ -1,11 +1,25 @@
 require 'reddwatch'
-require 'reddwatch/feed/reddit'
 
 module Reddwatch
   module Processor
     class Base
       def self.run(list)
         @list = self.get_list(list)
+
+        @feed = Reddwatch::Feed::Reddit.new.fetch(@list.join('+'))
+
+        @notifier = Reddwatch::Notifier::LibNotify.new
+
+        # TODO: check time stamps before sending out notifications
+        @feed.each do |post|
+          msg = {
+            title: "#{Reddwatch::APP_NAME} - #{post.subreddit.display_name}",
+            content: "#{post.title}",
+            level: 'dialog-info'
+          }
+          @notifier.send(msg)
+          sleep(5)
+        end
       end
 
       def self.stop

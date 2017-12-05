@@ -4,7 +4,7 @@ require 'forwardable'
 
 require 'reddwatch/cli'
 require 'reddwatch/list'
-require 'reddwatch/notify/notifier'
+require 'reddwatch/notifier/notifier'
 require 'reddwatch/processor/base'
 require 'reddwatch/feed/reddit'
 

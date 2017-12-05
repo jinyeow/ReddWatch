@@ -1,10 +1,11 @@
 require_relative 'base'
 
 module Reddwatch
-  module Notify
-    class Notifier < Reddwatch::Notify::Base
+  module Notifier
+    class LibNotify < Reddwatch::Notifier::Base
       def initialize
         @name = Reddwatch::APP_NAME
+
         GirFFI.setup :Notify
         Notify.init(@name)
       end

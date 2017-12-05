@@ -1,5 +1,7 @@
+require 'gir_ffi'
+
 module Reddwatch
-  module Notify
+  module Notifier
     class Base
       def send
         raise ImplementationError, \
