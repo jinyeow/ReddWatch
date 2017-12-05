@@ -5,7 +5,7 @@ require_relative 'base'
 module Reddwatch
   module Processor
     class Cron < Reddwatch::Processor::Base
-      def self.run
+      def self.run(list)
       end
 
       def self.stop

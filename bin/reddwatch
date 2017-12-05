@@ -8,10 +8,17 @@ require 'reddwatch'
 
 opts = {}
 
+if ARGV.length < 1 then ARGV << "-h" end
+
 OptionParser.new do |o|
   o.banner = "USAGE: #{$PROGRAM_NAME} [options] [subreddit|multi|list]"
 
   o.separator ""
+
+  o.on("--init", "Initialise ReddWatch.") do
+    Reddwatch.send(:init)
+    # Ask for client_id and client_secret and save in a config.yml file
+  end
 
   o.on("--start", "Start Reddwatch watcher.") do
     Reddwatch.send(:start)
