@@ -6,17 +6,15 @@ module Reddwatch
       def self.run(list)
         @list = self.get_list(list)
 
-        @feed = Reddwatch::Feed::Reddit.new.fetch(@list.join('+'))
+        @reddit = Reddwatch::Feed::Reddit.new
+        @feed   = @reddit.fetch(@list.join('+'))
 
         @notifier = Reddwatch::Notifier::LibNotify.new
 
         # TODO: check time stamps before sending out notifications
+        # TODO: use Process.daemon to daemonize Reddwatch
         @feed.each do |post|
-          msg = {
-            title: "#{Reddwatch::APP_NAME} - #{post.subreddit.display_name}",
-            content: "#{post.title}",
-            level: 'dialog-info'
-          }
+          msg = @reddit.create_message(post)
           @notifier.send(msg)
           sleep(5)
         end

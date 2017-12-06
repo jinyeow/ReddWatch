@@ -16,6 +16,14 @@ module Reddwatch
       def fetch(subs='')
         @session.subreddit(subs).new.children
       end
+
+      def create_message(post)
+        {
+          title: "#{Reddwatch::APP_NAME} - #{post.subreddit.display_name}",
+          content: "#{post.title}",
+          level: 'dialog-info'
+        }
+      end
     end
   end
 end

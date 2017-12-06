@@ -2,6 +2,8 @@ require "reddwatch/version"
 
 require 'forwardable'
 
+require 'json'
+
 require 'reddwatch/cli'
 require 'reddwatch/list'
 require 'reddwatch/notifier/notifier'
@@ -12,16 +14,71 @@ module Reddwatch
   extend Forwardable
 
   APP_NAME              = 'ReddWatch'
-  DEFAULT_CONFIG_DIR    = 'tmp'       # TODO: change this.
-  DEFAULT_WATCH_LIST    = 'default'
+  DEFAULT_CONFIG_DIR    = "#{Dir.home}/.reddwatch"
+  DEFAULT_CONFIG_FILE   = 'config.json'
+  DEFAULT_LIST_DIR      = "#{DEFAULT_CONFIG_DIR}/list"
+  DEFAULT_WATCH_LIST    = 'default.list'
   DEFAULT_CLI_PROCESSOR = 'Base'
 
   def self.init
+    puts "[*] Initialising #{APP_NAME}!!"
+
     # setup config directory - default to $HOME/.reddwatch
-    # setup initial config file - default to $HOME/.reddwatch/config.yml
-    # setup initial watch list - default to $HOME/.reddwatch/list/default
-    #
+    unless Dir.exists? DEFAULT_CONFIG_DIR
+      print "[+] -- Creating config directory: #{DEFAULT_CONFIG_DIR}..."
+      Dir.mkdir DEFAULT_CONFIG_DIR
+      if Dir.exists? DEFAULT_CONFIG_DIR
+        Dir.chdir DEFAULT_CONFIG_DIR
+        puts 'done!'
+      else
+        self.error_msg("couldn't create default configuration directory")
+      end
+    end
+
     # ask for client_id/client_secret and save to config.yml
+    puts '[+] -- Setting Reddit client id/secret.'
+    print 'Enter Reddit client id: '
+    client_id = gets.strip
+    print 'Enter Reddit client secret: '
+    client_secret = gets.strip
+
+    config = {
+      client_id: client_id,
+      client_secret: client_secret
+    }
+
+    # setup initial config file - default to $HOME/.reddwatch/config.yml
+    print "[+] -- Writing initial config file: #{DEFAULT_CONFIG_DIR}/" +
+      "#{DEFAULT_CONFIG_FILE}..."
+    File.open(DEFAULT_CONFIG_FILE, 'w') { |f| f.write config.to_json }
+    if File.exists? DEFAULT_CONFIG_FILE then
+      puts 'done!'
+    else
+      self.error_msg("couldn't create initial configuration file")
+    end
+
+    # setup initial watch list - default to $HOME/.reddwatch/list/default.list
+    unless Dir.exists? DEFAULT_LIST_DIR
+      print "[+] -- Creating lists directory: #{DEFAULT_LIST_DIR}..."
+      Dir.mkdir DEFAULT_LIST_DIR
+      if Dir.exists? DEFAULT_LIST_DIR
+        Dir.chdir DEFAULT_LIST_DIR
+        puts 'done!'
+      else
+        self.error_msg("couldn't create list directory")
+      end
+    end
+
+    print "[+] -- Writing default list file: #{DEFAULT_LIST_DIR}/" +
+      "#{DEFAULT_WATCH_LIST}..."
+    File.open(DEFAULT_WATCH_LIST, 'w') { |f| f.write 'ruby' }
+    if File.exists? DEFAULT_WATCH_LIST then
+      puts 'done!'
+    else
+      self.error_msg("couldn't create default watch list")
+    end
+
+    puts '[*] Init Complete!!'
   end
 
   def self.start
@@ -34,5 +91,26 @@ module Reddwatch
 
   def self.status
     Reddwatch::CLI.execute({status: true})
+  end
+
+  # Taken from 'jstorimer.com/blogs/workingwithcode/7766093-daemon-processes-in-ruby'
+  def self.daemonize
+    if RUBY_VERSION < "1.9" then
+      exit if fork
+      Process.setsid
+      exit if fork
+      Dir.chdir "/" # NOTE: Should set this to the DEFAULT_CONFIG_DIR
+      STDIN.reopen "/dev/null"
+      STDOUT.reopen "/dev/null", "a"
+      STDERR.reopen "/dev/null", "a"
+    else
+      Process.daemon
+    end
+  end
+
+  def self.error_msg(msg)
+    puts 'failed!'
+    puts "[!] ERROR: #{msg}."
+    exit
   end
 end

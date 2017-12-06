@@ -1,4 +1,5 @@
-#TODO
+require 'reddwatch'
+
 module Reddwatch
   module Feed
     class Base
