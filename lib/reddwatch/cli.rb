@@ -26,6 +26,7 @@ module Reddwatch
 
     # Start cron
     def start
+      Reddwatch.daemonize
       Reddwatch::Processor.const_get(@processor).run(@watching)
     end
 

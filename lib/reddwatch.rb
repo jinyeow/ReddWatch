@@ -99,13 +99,16 @@ module Reddwatch
       exit if fork
       Process.setsid
       exit if fork
-      Dir.chdir "/" # NOTE: Should set this to the DEFAULT_CONFIG_DIR
+      Dir.chdir "/"
       STDIN.reopen "/dev/null"
       STDOUT.reopen "/dev/null", "a"
       STDERR.reopen "/dev/null", "a"
     else
       Process.daemon
     end
+
+    pid = Process.pid
+    File.open('/tmp/reddwatch.pid', 'w') { |f| f.write(pid) }
   end
 
   def self.error_msg(msg)
