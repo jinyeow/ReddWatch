@@ -96,9 +96,9 @@ module Reddwatch
   # Taken from 'jstorimer.com/blogs/workingwithcode/7766093-daemon-processes-in-ruby'
   def self.daemonize
     if RUBY_VERSION < "1.9" then
-      exit if fork
+      exit(0) if fork
       Process.setsid
-      exit if fork
+      exit(0) if fork
       Dir.chdir "/"
       STDIN.reopen "/dev/null"
       STDOUT.reopen "/dev/null", "a"
@@ -114,6 +114,6 @@ module Reddwatch
   def self.error_msg(msg)
     puts 'failed!'
     puts "[!] ERROR: #{msg}."
-    exit
+    exit(1)
   end
 end

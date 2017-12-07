@@ -4,19 +4,28 @@ module Reddwatch
   module Processor
     class Base
       def self.run(list)
-        @list = self.get_list(list)
+        list = self.get_list(list)
 
-        @reddit = Reddwatch::Feed::Reddit.new
-        @notifier = Reddwatch::Notifier::LibNotify.new
+        reddit = Reddwatch::Feed::Reddit.new
+        notifier = Reddwatch::Notifier::LibNotify.new
 
-        @feed   = @reddit.fetch(@list.join('+'))
+        feed   = reddit.fetch(list.join('+'))
+        last_checked = 0
 
-        # TODO: setup a loop
-        # TODO: check time stamps before sending out notifications
-        @feed.each do |post|
-          msg = @reddit.create_message(post)
-          @notifier.send(msg)
-          sleep(5)
+        loop do
+          feed.each do |post|
+            if post.created_utc > last_checked then
+              msg = reddit.create_message(post)
+              notifier.send(msg)
+              sleep(5)
+            else
+              break
+            end
+          end
+          t = Thread.new { feed = reddit.fetch(list.join('+')) }
+          last_checked = Time.now.utc.to_i
+          sleep(60*5) # sleep for 5 min
+          t.join
         end
       end
 
@@ -45,7 +54,7 @@ module Reddwatch
       def self.get_list(list)
         unless File.exists? "#{Reddwatch::DEFAULT_LIST_DIR}/#{list}"
           $stderr.puts("ERROR: '#{list}' list does not exist.")
-          exit
+          exit(1)
         end
 
         open("#{Reddwatch::DEFAULT_LIST_DIR}/#{list}", 'r').readlines.map do |line|

@@ -18,8 +18,8 @@ module Reddwatch
 
     # TODO
     def run
-      start if @options[:start]
-      stop if @options[:stop]
+      start  if @options[:start]
+      stop   if @options[:stop]
 
       status if @options[:status]
     end

@@ -17,7 +17,6 @@ OptionParser.new do |o|
 
   o.on("--init", "Initialise ReddWatch.") do
     Reddwatch.send(:init)
-    # Ask for client_id and client_secret and save in a config.yml file
   end
 
   o.on("--start", "Start Reddwatch watcher.") do
@@ -28,7 +27,7 @@ OptionParser.new do |o|
     Reddwatch.send(:stop)
   end
 
-  o.on("--status", "Print status of Reddwatch watcher to the terminal.") do
+  o.on("--status", "Print status of Reddwatch watcher as a notification.") do
     Reddwatch.send(:status)
   end
 
