@@ -33,6 +33,7 @@ OptionParser.new do |o|
 
   o.separator ""
 
+  # TODO: implement list functionality
   o.on("-L", "--list-lists", "List all created watch lists.") do
     # List lists
   end
