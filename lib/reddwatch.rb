@@ -7,6 +7,7 @@ require 'json'
 require 'reddwatch/cli'
 require 'reddwatch/logger'
 require 'reddwatch/list'
+require 'reddwatch/server'
 require 'reddwatch/notifier/notifier'
 require 'reddwatch/processor/base'
 require 'reddwatch/feed/reddit'
@@ -20,6 +21,11 @@ module Reddwatch
   DEFAULT_CONFIG_FILE = 'config.json'
   DEFAULT_LIST_DIR    = "#{DEFAULT_CONFIG_DIR}/list"
   DEFAULT_WATCH_LIST  = 'default.list'
+
+  DEFAULT_PROCESSOR   = 'Base'
+
+  PID_FILE            = '/tmp/reddwatch.pid'
+  FIFO_FILE           = '/tmp/reddwatch.fifo'
 
   def self.init
     puts "[*] Initialising #{APP_NAME}!!"

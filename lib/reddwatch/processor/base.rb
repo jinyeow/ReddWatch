@@ -70,16 +70,16 @@ module Reddwatch
 
       def stop
         begin
-          if File.exists? Reddwatch::CLI::PID_FILE then
+          if File.exists? Reddwatch::PID_FILE then
             @logger.log("EVENT: in base#stop.")
-            File.delete(Reddwatch::CLI::PID_FILE)
+            File.delete(Reddwatch::PID_FILE)
             @logger.log("EVENT: deleted pid file.")
-            File.delete(Reddwatch::CLI::FIFO_FILE)
+            File.delete(Reddwatch::FIFO_FILE)
             @logger.log("EVENT: deleted fifo file.")
             @running = false
             @logger.log("EVENT: ReddWatch stopped.")
             # begin
-            #   pid = open(Reddwatch::CLI::PID_FILE, 'r').readline.strip.to_i
+            #   pid = open(Reddwatch::PID_FILE, 'r').readline.strip.to_i
             #   Process.kill("KILL", pid)
             # rescue Exception => e
             #   @logger.log("ERROR: #{e}")
@@ -100,8 +100,8 @@ module Reddwatch
           level: 'dialog-info'
         }
 
-        if File.exists? Reddwatch::CLI::PID_FILE and
-            File.exists? Reddwatch::CLI::FIFO_FILE then
+        if File.exists? Reddwatch::PID_FILE and
+            File.exists? Reddwatch::FIFO_FILE then
           msg[:content] = "Running..."
         end
 

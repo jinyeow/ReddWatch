@@ -19,6 +19,10 @@ OptionParser.new do |o|
     Reddwatch.send(:init)
   end
 
+  o.on("--start-server", "Start Reddwatch server.") do
+    Reddwatch::Server.send(:start)
+  end
+
   o.on("--start", "Start Reddwatch watcher.") do
     opts[:start] = true
   end
