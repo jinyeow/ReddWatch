@@ -1,5 +1,3 @@
-require 'reddwatch'
-
 module Reddwatch
   module Logger
     LOG_FILE = '/tmp/reddwatch.log'

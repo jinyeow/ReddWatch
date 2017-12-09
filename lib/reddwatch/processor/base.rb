@@ -61,6 +61,8 @@ module Reddwatch
               break
             end
           end
+
+          @logger.log('EVENT: fetching new posts.')
           t = Thread.new { feed = @reddit.fetch(list.join('+')) }
           last_checked = Time.now.utc.to_i
           sleep(DEFAULT_CHECK_TIME)

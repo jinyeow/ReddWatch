@@ -63,12 +63,12 @@ OptionParser.new do |o|
   o.on("-s", "--subscribe SUBREDDIT[,SUBREDDIT,SUBREDDIT,...]", Array, \
        "Comma-separated list of subreddits to watch.") do |s|
     pp s
-    opts[:subcribe] = s
+    opts[:subscribe] = s
   end
 
-  o.on("-u", "--unwatch SUBREDDIT[,SUBREDDIT,SUBREDDIT,...]", Array, \
+  o.on("-u", "--unsubscribe SUBREDDIT[,SUBREDDIT,SUBREDDIT,...]", Array, \
        "Comma-separated list of subreddits to stop watching.") do |u|
-    opts[:unwatch] = u
+    opts[:unsubscribe] = u
   end
 
   o.on("-c", "--clear", "Clear all subreddits from the current list.") do
@@ -88,4 +88,5 @@ OptionParser.new do |o|
   end
 end.parse!
 
+pp opts
 Reddwatch::CLI.execute(opts)
