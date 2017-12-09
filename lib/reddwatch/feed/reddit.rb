@@ -19,7 +19,7 @@ module Reddwatch
 
       def create_message(post)
         {
-          title: "#{Reddwatch::APP_NAME} - #{post.subreddit.display_name}",
+          title: "#{Reddwatch::APP_NAME} - r/#{post.subreddit.display_name}",
           content: "#{post.title}",
           level: 'dialog-info'
         }

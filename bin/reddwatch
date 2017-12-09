@@ -20,15 +20,15 @@ OptionParser.new do |o|
   end
 
   o.on("--start", "Start Reddwatch watcher.") do
-    Reddwatch.send(:start)
+    opts[:start] = true
   end
 
   o.on("--stop", "Stop Reddwatch watcher.") do
-    Reddwatch.send(:stop)
+    opts[:stop] = true
   end
 
   o.on("--status", "Print status of Reddwatch watcher as a notification.") do
-    Reddwatch.send(:status)
+    opts[:status] = true
   end
 
   o.separator ""

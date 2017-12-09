@@ -22,81 +22,100 @@ module Reddwatch
       DEFAULT_WAIT_INTERVAL = 5.seconds # time between each post notification
       DEFAULT_CHECK_TIME    = 5.minutes # time between each reddit fetch
 
-      def self.run(list)
-        self.log("EVENT: ReddWatch started.")
-        list = self.get_list(list)
+      def initialize(opts = {})
+        @options = opts
+        @list    = @options[:list]
 
-        reddit = Reddwatch::Feed::Reddit.new
-        notifier = Reddwatch::Notifier::LibNotify.new
+        @logger   = Reddwatch::Logger
+        @reddit   = Reddwatch::Feed::Reddit.new
+        @notifier = Reddwatch::Notifier::LibNotify.new
 
-        feed   = reddit.fetch(list.join('+'))
+        @running = false
+      end
+
+      def run
+        @logger.log("EVENT: ReddWatch started.")
+        list = get_list(@list)
+
+        feed   = @reddit.fetch(list.join('+'))
 
         # On startup show the newest 5 posts
         feed.take(5).each do |post|
-          msg = reddit.create_message(post)
-          notifier.send(msg)
+          msg = @reddit.create_message(post)
+          @notifier.send(msg)
           sleep(DEFAULT_WAIT_INTERVAL)
         end
 
         last_checked = Time.now.utc.to_i
 
+        @running = true
+
         # Main loop
-        loop do
+        while @running do
           feed.each do |post|
             if post.created_utc > last_checked then
-              msg = reddit.create_message(post)
-              notifier.send(msg)
+              msg = @reddit.create_message(post)
+              @notifier.send(msg)
               sleep(DEFAULT_WAIT_INTERVAL)
             else
               break
             end
           end
-          t = Thread.new { feed = reddit.fetch(list.join('+')) }
+          t = Thread.new { feed = @reddit.fetch(list.join('+')) }
           last_checked = Time.now.utc.to_i
           sleep(DEFAULT_CHECK_TIME)
           t.join
         end
       end
 
-      def self.stop
-        if File.exists? '/tmp/reddwatch.pid' then
-          pid = open('/tmp/reddwatch.pid', 'r').readline.strip.to_i
-          Process.kill("KILL", pid)
-          File.delete('/tmp/reddwatch.pid')
-          self.log("EVENT: ReddWatch stopped.")
-          self.status
-        else
-          puts "ERROR: ReddWatch is not running."
-          self.log("ERROR: ReddWatch is not running.")
+      def stop
+        begin
+          if File.exists? Reddwatch::CLI::PID_FILE then
+            @logger.log("EVENT: in base#stop.")
+            File.delete(Reddwatch::CLI::PID_FILE)
+            @logger.log("EVENT: deleted pid file.")
+            File.delete(Reddwatch::CLI::FIFO_FILE)
+            @logger.log("EVENT: deleted fifo file.")
+            @running = false
+            @logger.log("EVENT: ReddWatch stopped.")
+            # begin
+            #   pid = open(Reddwatch::CLI::PID_FILE, 'r').readline.strip.to_i
+            #   Process.kill("KILL", pid)
+            # rescue Exception => e
+            #   @logger.log("ERROR: #{e}")
+            # end
+            status
+          else
+            @logger.log("ERROR: ReddWatch is not running.")
+          end
+        rescue Exception => e
+          @logger.log("ERROR: #{e}")
         end
       end
 
-      def self.status
+      def status
         msg = {
           title: "#{Reddwatch::APP_NAME} - Status",
           content: 'Stopped.',
           level: 'dialog-info'
         }
 
-        msg[:content] = "Running..." if File.exists? '/tmp/reddwatch.pid'
+        if File.exists? Reddwatch::CLI::PID_FILE and
+            File.exists? Reddwatch::CLI::FIFO_FILE then
+          msg[:content] = "Running..."
+        end
 
-        Reddwatch::Notifier::LibNotify.new.send(msg)
+        @notifier.send(msg)
       end
 
-      def self.get_list(list)
+      def get_list(list)
         unless File.exists? "#{Reddwatch::DEFAULT_LIST_DIR}/#{list}"
-          self.log("ERROR: '#{list}' list does not exist.")
+          @logger.log("ERROR: '#{list}' list does not exist.")
           exit(1)
         end
 
         open("#{Reddwatch::DEFAULT_LIST_DIR}/#{list}", 'r').readlines.map do |line|
           line.strip
-        end
-      end
-
-      def self.log(msg)
-        File.open('/tmp/reddwatch.log', File::WRONLY|File::CREAT|File::APPEND) do |f|
-          f.puts "#{Time.now.utc.to_i}:: #{msg}"
         end
       end
     end

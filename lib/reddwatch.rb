@@ -5,6 +5,7 @@ require 'forwardable'
 require 'json'
 
 require 'reddwatch/cli'
+require 'reddwatch/logger'
 require 'reddwatch/list'
 require 'reddwatch/notifier/notifier'
 require 'reddwatch/processor/base'
@@ -13,12 +14,12 @@ require 'reddwatch/feed/reddit'
 module Reddwatch
   extend Forwardable
 
-  APP_NAME              = 'ReddWatch'
-  DEFAULT_CONFIG_DIR    = "#{Dir.home}/.reddwatch"
-  DEFAULT_CONFIG_FILE   = 'config.json'
-  DEFAULT_LIST_DIR      = "#{DEFAULT_CONFIG_DIR}/list"
-  DEFAULT_WATCH_LIST    = 'default.list'
-  DEFAULT_CLI_PROCESSOR = 'Base'
+  APP_NAME            = 'ReddWatch'
+
+  DEFAULT_CONFIG_DIR  = "#{Dir.home}/.reddwatch"
+  DEFAULT_CONFIG_FILE = 'config.json'
+  DEFAULT_LIST_DIR    = "#{DEFAULT_CONFIG_DIR}/list"
+  DEFAULT_WATCH_LIST  = 'default.list'
 
   def self.init
     puts "[*] Initialising #{APP_NAME}!!"
@@ -81,39 +82,10 @@ module Reddwatch
     puts '[*] Init Complete!!'
   end
 
-  def self.start
-    Reddwatch::CLI.execute({start: true})
-  end
-
-  def self.stop
-    Reddwatch::CLI.execute({stop: true})
-  end
-
-  def self.status
-    Reddwatch::CLI.execute({status: true})
-  end
-
-  # Taken from 'jstorimer.com/blogs/workingwithcode/7766093-daemon-processes-in-ruby'
-  def self.daemonize
-    if RUBY_VERSION < "1.9" then
-      exit(0) if fork
-      Process.setsid
-      exit(0) if fork
-      Dir.chdir "/"
-      STDIN.reopen "/dev/null"
-      STDOUT.reopen "/dev/null", "a"
-      STDERR.reopen "/dev/null", "a"
-    else
-      Process.daemon
+  private
+    def error_msg(msg)
+      puts 'failed!'
+      puts "[!] ERROR: #{msg}."
+      exit(1)
     end
-
-    pid = Process.pid
-    File.open('/tmp/reddwatch.pid', 'w') { |f| f.write(pid) }
-  end
-
-  def self.error_msg(msg)
-    puts 'failed!'
-    puts "[!] ERROR: #{msg}."
-    exit(1)
-  end
 end
