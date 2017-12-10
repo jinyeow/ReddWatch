@@ -1,7 +1,7 @@
 require 'reddwatch'
 
 module Reddwatch
-  class CLI
+  class Client
     def self.execute(options={})
       new(options).run
     end
@@ -9,8 +9,9 @@ module Reddwatch
     def initialize(options={})
       @options = options
 
-      @notifier = Reddwatch::Notifier::LibNotify.new
+      @fifo     = Reddwatch::FIFO.new
       @logger   = Reddwatch::Logger
+      @notifier = Reddwatch::Notifier::LibNotify.new
 
       # @watching = @options[:watch] || Reddwatch::DEFAULT_WATCH_LIST
       # @processor = Reddwatch::Processor.const_get(DEFAULT_PROCESSOR)
@@ -39,33 +40,45 @@ module Reddwatch
     end
 
     def subscribe
-      @logger.log('EVENT: in cli#subscribe.')
+      @logger.log('EVENT: in client#subscribe.')
       write_fifo("SUBSCRIBE #{@options[:subscribe].join(',')}")
     end
 
     def list
-      # TODO: choose a method to reply to the client
-      #       either a 2-way fifo/pipe
-      #       or 2 different fifos/pipes
-      #       or move clear_fifo to each case as needed.
-      @logger.log('EVENT: in cli#list.')
-      write_fifo("LIST") and mtime = File.mtime(FIFO_FILE)
-      puts "#{read_fifo}" if File.mtime(FIFO_FILE) > mtime
+      @logger.log('EVENT: in client#list.')
+      write_fifo("LIST")
+      lock_fifo
+      sleep 0.5 while fifo_locked?
+      results = read_fifo.gsub(',', "\n")
+      puts "#{results}"
+      lock_fifo
     end
 
     def unsubscribe
-      @logger.log('EVENT: in cli#unsubscribe.')
+      @logger.log('EVENT: in client#unsubscribe.')
       write_fifo("UNSUBSCRIBE #{@options[:unsubscribe].join(',')}")
     end
 
     private
       
       def write_fifo(cmd)
-        File.open(FIFO_FILE, 'w') { |f| f.write "#{cmd}" }
+        @fifo.write(cmd)
       end
 
       def read_fifo
-        File.open(FIFO_FILE, 'r').readline.strip
+        @fifo.read.strip
+      end
+
+      def fifo_locked?
+        @fifo.locked?
+      end
+
+      def lock_fifo
+        @fifo.lock
+      end
+
+      def unlock_fifo
+        @fifo.unlock
       end
   end
 end

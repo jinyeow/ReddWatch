@@ -6,15 +6,18 @@ module Reddwatch
       begin
         new().run
       rescue Exception => e
+        File.delete(Reddwatch::PID_FILE)
         Reddwatch::Logger.log("ERROR: Server DIED :: #{e}")
+        puts e
       end
     end
 
     def initialize(options={})
       @options   = options
 
-      @logger   = Reddwatch::Logger
-      @notifier = Reddwatch::Notifier::LibNotify.new
+      @fifo      = Reddwatch::FIFO.new
+      @logger    = Reddwatch::Logger
+      @notifier  = Reddwatch::Notifier::LibNotify.new
 
       @watching  = @options[:watch] || Reddwatch::DEFAULT_WATCH_LIST
       @list      = Reddwatch::List.new({name: @watching})
@@ -23,7 +26,7 @@ module Reddwatch
     end
 
     def run
-      daemonize and start_service and running = true
+      daemonize and running = true
 
       msg = {
         title: "#{Reddwatch::APP_NAME} - Status",
@@ -39,45 +42,47 @@ module Reddwatch
         Thread.new { @processor.run }
 
         while running do
-          sleep 0.5
-          unless File.empty? Reddwatch::FIFO_FILE then
-            cmd = read_fifo
-            input = parse_cmd(cmd)
+          cmd = read_fifo
+          @logger.log("EVENT: fifo read #{cmd}.")
 
-            @logger.log("EVENT: caught #{input[:cmd]}.")
+          input = parse_cmd(cmd)
 
-            case input[:cmd]
-            when "START"
-              Thread.new { @processor.run }
-              running = true
-            when "STOP"
-              running = false
-              @processor.stop
-            when "STATUS"
-              @processor.status
-            when "SUBSCRIBE"
-              @logger.log("EVENT: subscribe with args: #{input[:args]}")
-              if @list.add(input[:args]) then
-                @logger.log("EVENT: subscribed to #{input[:args].join(',')}")
-              end
-            when "LIST"
-              @logger.log("EVENT: list result is: #{@list.list.join(",")}")
-              write_fifo("#{@list.list.join("\n")}")
-            when "UNSUBSCRIBE"
-              @logger.log("EVENT: unsubscribe with args: #{input[:args]}")
-              if @list.remove(input[:args]) then
-                @logger.log('EVENT: unsubscribe successful.')
-              end
+          @logger.log("EVENT: caught #{input[:cmd]}.")
+
+          case input[:cmd]
+          when "START"
+            Thread.new { @processor.run }
+            running = true
+            # clear_fifo
+          when "STOP"
+            running = false
+            @processor.stop
+            close_fifo
+          when "STATUS"
+            @processor.status
+            # clear_fifo
+          when "SUBSCRIBE"
+            @logger.log("EVENT: subscribe with args: #{input[:args]}")
+            if @list.add(input[:args]) then
+              @logger.log("EVENT: subscribed to #{input[:args].join(',')}")
             end
-
-            # Need to check for 'STOP' otherwise the FIFO_FILE gets created
-            # after we stop reddwatch which FC*Ks up the next startup of reddwatch.
-            clear_fifo unless input[:cmd] == 'STOP'
+            # clear_fifo
+          when "LIST"
+            @logger.log("EVENT: list result is: #{@list.list.join(",")}")
+            unlock_fifo
+            write_fifo("#{@list.list.join(",")}")
+            sleep 0.5 until fifo_locked?
+            unlock_fifo
+          when "UNSUBSCRIBE"
+            @logger.log("EVENT: unsubscribe with args: #{input[:args]}")
+            if @list.remove(input[:args]) then
+              @logger.log('EVENT: unsubscribe successful.')
+            end
+            # clear_fifo
           end
         end
       else
-        File.delete(Reddwatch::PID_FILE)
-        File.delete(Reddwatch::FIFO_FILE)
+        clean_shutdown
         msg[:content] = "Startup failed."
         @notifier.send(msg)
       end
@@ -103,10 +108,6 @@ module Reddwatch
         File.open(Reddwatch::PID_FILE, 'w') { |f| f.write(pid) }
       end
 
-      def read_fifo
-        open(Reddwatch::FIFO_FILE, 'r').readline.strip
-      end
-
       def parse_cmd(line)
         cmd,args = /^([A-Z]+)\s?(.*)$/.match(line).captures
         {
@@ -115,23 +116,38 @@ module Reddwatch
         }
       end
 
-      def start_service
-        # check for Reddwatch::FIFO_FILE
-        if File.exists? Reddwatch::FIFO_FILE then
-          return false
-        else # if it doesn't exist, this becomes the main process
-          # create Reddwatch::FIFO_FILE
-          File.open(Reddwatch::FIFO_FILE, 'w') {}
-          return true
-        end
+      def clear_fifo
+        @fifo.clear
       end
 
-      def clear_fifo
-        File.open(Reddwatch::FIFO_FILE, 'w') {}
+      def read_fifo
+        @fifo.read.strip
       end
 
       def write_fifo(cmd)
-        File.open(Reddwatch::FIFO_FILE, 'w') { |f| f.write "#{cmd}" }
+        @fifo.write(cmd)
+      end
+
+      def close_fifo
+        @fifo.close
+        @logger.log('EVENT: deleted fifo.')
+      end
+
+      def lock_fifo
+        @fifo.lock
+      end
+
+      def unlock_fifo
+        @fifo.unlock
+      end
+
+      def fifo_locked?
+        @fifo.locked?
+      end
+
+      def clean_shutdown
+        @fifo.close
+        File.delete(Reddwatch::PID_FILE)
       end
   end
 end

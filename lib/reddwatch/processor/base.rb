@@ -23,14 +23,14 @@ module Reddwatch
       DEFAULT_CHECK_TIME    = 5.minutes # time between each reddit fetch
 
       def initialize(opts = {})
-        @options = opts
-        @list    = @options[:list]
+        @options  = opts
+        @list     = @options[:list]
 
         @logger   = Reddwatch::Logger
         @reddit   = Reddwatch::Feed::Reddit.new
         @notifier = Reddwatch::Notifier::LibNotify.new
 
-        @running = false
+        @running  = false
       end
 
       def run
@@ -73,19 +73,11 @@ module Reddwatch
       def stop
         begin
           if File.exists? Reddwatch::PID_FILE then
-            @logger.log("EVENT: in base#stop.")
+            @logger.log("EVENT: Beginning shutdown sequence.")
             File.delete(Reddwatch::PID_FILE)
             @logger.log("EVENT: deleted pid file.")
-            File.delete(Reddwatch::FIFO_FILE)
-            @logger.log("EVENT: deleted fifo file.")
             @running = false
             @logger.log("EVENT: ReddWatch stopped.")
-            # begin
-            #   pid = open(Reddwatch::PID_FILE, 'r').readline.strip.to_i
-            #   Process.kill("KILL", pid)
-            # rescue Exception => e
-            #   @logger.log("ERROR: #{e}")
-            # end
             status
           else
             @logger.log("ERROR: ReddWatch is not running.")
@@ -102,8 +94,7 @@ module Reddwatch
           level: 'dialog-info'
         }
 
-        if File.exists? Reddwatch::PID_FILE and
-            File.exists? Reddwatch::FIFO_FILE then
+        if File.exists? Reddwatch::PID_FILE then
           msg[:content] = "Running..."
         end
 

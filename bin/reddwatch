@@ -19,7 +19,7 @@ OptionParser.new do |o|
     Reddwatch.send(:init)
   end
 
-  o.on("--start-server", "Start Reddwatch server.") do
+  o.on("--server", "Start Reddwatch server.") do
     Reddwatch::Server.send(:start)
   end
 
@@ -89,4 +89,4 @@ OptionParser.new do |o|
 end.parse!
 
 pp opts
-Reddwatch::CLI.execute(opts)
+Reddwatch::Client.execute(opts)
