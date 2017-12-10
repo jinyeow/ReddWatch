@@ -57,6 +57,7 @@ module Reddwatch
       save_list(@subs)
     end
 
+    # Deletes the list
     def delete
       @subs = []
       File.delete("#{@list_dir}/#{@name}.list")

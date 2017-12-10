@@ -12,19 +12,15 @@ module Reddwatch
       @fifo     = Reddwatch::FIFO.new
       @logger   = Reddwatch::Logger
       @notifier = Reddwatch::Notifier::LibNotify.new
-
-      # @watching = @options[:watch] || Reddwatch::DEFAULT_WATCH_LIST
-      # @processor = Reddwatch::Processor.const_get(DEFAULT_PROCESSOR)
-      #   .new({list: @watching})
     end
 
     def run
-      start if @options[:start]
-      stop if @options[:stop]
-      status if @options[:status]
-      subscribe if @options[:subscribe]
-      list if @options[:list]
-      unsubscribe if @options[:unsubscribe]
+      %w(start stop status subscribe list unsubscribe clear).each do |s|
+        if @options[s.to_sym] then
+          @logger.log("EVENT: in client##{s}.")
+          send(s)
+        end
+      end
     end
 
     def start
@@ -40,13 +36,11 @@ module Reddwatch
     end
 
     def subscribe
-      @logger.log('EVENT: in client#subscribe.')
       write_fifo("SUBSCRIBE #{@options[:subscribe].join(',')}")
     end
 
     def list
-      @logger.log('EVENT: in client#list.')
-      write_fifo("LIST")
+      write_fifo('LIST')
       lock_fifo
       sleep 0.5 while fifo_locked?
       results = read_fifo.gsub(',', "\n")
@@ -55,8 +49,11 @@ module Reddwatch
     end
 
     def unsubscribe
-      @logger.log('EVENT: in client#unsubscribe.')
       write_fifo("UNSUBSCRIBE #{@options[:unsubscribe].join(',')}")
+    end
+
+    def clear
+      write_fifo('CLEAR')
     end
 
     private

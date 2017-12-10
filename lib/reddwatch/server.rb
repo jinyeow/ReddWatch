@@ -50,35 +50,33 @@ module Reddwatch
           @logger.log("EVENT: caught #{input[:cmd]}.")
 
           case input[:cmd]
-          when "START"
+          when 'START'
             Thread.new { @processor.run }
             running = true
-            # clear_fifo
-          when "STOP"
+          when 'STOP'
             running = false
             @processor.stop
             close_fifo
-          when "STATUS"
+          when 'STATUS'
             @processor.status
-            # clear_fifo
-          when "SUBSCRIBE"
+          when 'SUBSCRIBE'
             @logger.log("EVENT: subscribe with args: #{input[:args]}")
             if @list.add(input[:args]) then
               @logger.log("EVENT: subscribed to #{input[:args].join(',')}")
             end
-            # clear_fifo
-          when "LIST"
+          when 'LIST'
             @logger.log("EVENT: list result is: #{@list.list.join(",")}")
             unlock_fifo
             write_fifo("#{@list.list.join(",")}")
             sleep 0.5 until fifo_locked?
             unlock_fifo
-          when "UNSUBSCRIBE"
+          when 'UNSUBSCRIBE'
             @logger.log("EVENT: unsubscribe with args: #{input[:args]}")
             if @list.remove(input[:args]) then
               @logger.log('EVENT: unsubscribe successful.')
             end
-            # clear_fifo
+          when 'CLEAR'
+            @list.clear
           end
         end
       else
