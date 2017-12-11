@@ -77,6 +77,32 @@ module Reddwatch
             end
           when 'CLEAR'
             @list.clear
+          when 'CREATE'
+            # TODO
+            @logger.log("EVENT: create with args: #{input[:args]}")
+            Reddwatch::List.new({name: input[:args]})
+          when 'WATCH'
+            # TODO
+            @logger.log("EVENT: watch with args: #{input[:args]}")
+            @list = Reddwatch::List.new({name: input[:args]})
+            # restart Processor::Base with the new list
+          when 'DELETE'
+            # TODO
+            @logger.log("EVENT: delete with args: #{input[:args]}")
+            if @list.name.eql? input[:args] then
+              @list.delete
+              @list = nil
+              # restart/pause Processor::Base with the new list
+            else
+              Reddwatch::List.new({name: input[:args]}).delete
+            end
+          when 'LLIST'
+            results = @list.llist
+            @logger.log("EVENT: llist result is: #{results.join(",")}")
+            unlock_fifo
+            write_fifo("#{results.join(",")}")
+            sleep 0.5 until fifo_locked?
+            unlock_fifo
           end
         end
       else

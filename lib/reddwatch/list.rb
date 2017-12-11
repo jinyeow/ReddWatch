@@ -15,6 +15,11 @@ module Reddwatch
       @subs = load_list(@name)
     end
 
+    # List all lists in the list_dir
+    def llist
+      Dir::glob("#{@list_dir}/*.list").map { |f| File.basename(f, '.list') }
+    end
+
     # List subreddits in this list
     def list
       @subs
@@ -59,8 +64,19 @@ module Reddwatch
 
     # Deletes the list
     def delete
-      @subs = []
       File.delete("#{@list_dir}/#{@name}.list")
+      unless File.exists? "#{@list_dir}/#{@name}.list" then
+        @subs = nil
+        @name = nil
+      end
+    end
+
+    def name
+      @name
+    end
+
+    def dir
+      @list_dir
     end
 
     private

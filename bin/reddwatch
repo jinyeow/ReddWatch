@@ -37,9 +37,9 @@ OptionParser.new do |o|
 
   o.separator ""
 
-  # TODO: implement list functionality
   o.on("-L", "--list-lists", "List all created watch lists.") do
     # List lists
+    opts[:llist] = true
   end
 
   o.on("-C", "--create-list NAME", "Create a new watch list.") do |c|

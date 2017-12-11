@@ -101,6 +101,7 @@ module Reddwatch
         @notifier.send(msg)
       end
 
+      # TODO: instead of using this use a List object to get the subs
       def get_list(list)
         unless File.exists? "#{Reddwatch::DEFAULT_LIST_DIR}/#{list}"
           @logger.log("ERROR: '#{list}' list does not exist.")
