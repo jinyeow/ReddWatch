@@ -103,6 +103,13 @@ module Reddwatch
             write_fifo("#{results.join(",")}")
             sleep 0.5 until fifo_locked?
             unlock_fifo
+          when 'RESTART'
+            begin
+              @logger.log('EVENT: server.rb::restart')
+              Thread.new { @processor.restart(@watching) }
+            rescue Exception => e
+              @logger.log("ERROR: #{e}")
+            end
           end
         end
       else

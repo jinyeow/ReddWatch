@@ -1,0 +1,18 @@
+{
+  "README.md": { "type": "docs" },
+  "Rakefile": { "type": "rake" },
+  "Guardfile": { "type": "guard" },
+  "lib/*.rb": {
+    "type": "source",
+    "alternate": "spec/{}_spec.rb"
+  },
+  "spec/*_spec.rb": {
+    "type": "test",
+    "alternate": "lib/{}.rb"
+  },
+  "bin/reddwatch": {
+    "type": "bin",
+    "alternate": "lib/reddwatch.rb"
+  },
+  "TODO.md": { "type": "todo" }
+}

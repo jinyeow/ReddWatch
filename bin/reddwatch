@@ -35,6 +35,10 @@ OptionParser.new do |o|
     opts[:status] = true
   end
 
+  o.on("--restart", "Restarts the Reddwatch server.") do
+    opts[:restart] = true
+  end
+
   o.separator ""
 
   o.on("-L", "--list-lists", "List all created watch lists.") do

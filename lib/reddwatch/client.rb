@@ -16,7 +16,7 @@ module Reddwatch
 
     def run
       # TODO: add create,watch,delete commands
-      %w(start stop status subscribe list unsubscribe clear llist).each do |s|
+      %w(start stop status subscribe list unsubscribe clear llist restart).each do |s|
         if @options[s.to_sym] then
           @logger.log("EVENT: in client##{s}.")
           send(s)
@@ -76,6 +76,10 @@ module Reddwatch
 
     def delete
       # TODO
+    end
+
+    def restart
+      write_fifo('RESTART')
     end
 
     private

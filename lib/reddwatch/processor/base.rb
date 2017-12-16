@@ -101,6 +101,14 @@ module Reddwatch
         @notifier.send(msg)
       end
 
+      def restart(watching)
+        @running = false
+        @logger.log("EVENT: Reddwatch stopped.")
+        @logger.log("EVENT: restarting server...")
+        @list = watching
+        run
+      end
+
       # TODO: instead of using this use a List object to get the subs
       def get_list(list)
         unless File.exists? "#{Reddwatch::DEFAULT_LIST_DIR}/#{list}"
