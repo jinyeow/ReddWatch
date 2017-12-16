@@ -96,5 +96,5 @@ OptionParser.new do |o|
   end
 end.parse!
 
-pp opts
+# pp opts # debug only
 Reddwatch::Client.execute(opts)
