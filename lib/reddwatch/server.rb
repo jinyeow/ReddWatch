@@ -8,7 +8,7 @@ module Reddwatch
       rescue Exception => e
         File.delete(Reddwatch::PID_FILE) if File.exists? Reddwatch::PID_FILE
         Reddwatch::Logger.log("ERROR: Server DIED :: #{e}")
-        puts e
+        puts e.backtrace
       end
     end
 
