@@ -6,7 +6,7 @@ module Reddwatch
       begin
         new().run
       rescue Exception => e
-        File.delete(Reddwatch::PID_FILE)
+        File.delete(Reddwatch::PID_FILE) if File.exists? Reddwatch::PID_FILE
         Reddwatch::Logger.log("ERROR: Server DIED :: #{e}")
         puts e
       end
@@ -22,7 +22,7 @@ module Reddwatch
       @watching  = @options[:watch] || Reddwatch::DEFAULT_WATCH_LIST
       @list      = Reddwatch::List.new({name: @watching})
       @processor = Reddwatch::Processor.const_get(DEFAULT_PROCESSOR)
-        .new({list: @watching})
+        .new({watch: @watching})
     end
 
     def run
@@ -63,6 +63,7 @@ module Reddwatch
             @logger.log("EVENT: subscribe with args: #{input[:args]}")
             if @list.add(input[:args]) then
               @logger.log("EVENT: subscribed to #{input[:args].join(',')}")
+              restart({watch: @list.name})
             end
           when 'LIST'
             @logger.log("EVENT: list result is: #{@list.list.join(",")}")
@@ -74,27 +75,40 @@ module Reddwatch
             @logger.log("EVENT: unsubscribe with args: #{input[:args]}")
             if @list.remove(input[:args]) then
               @logger.log('EVENT: unsubscribe successful.')
+              restart({watch: @list.name})
             end
           when 'CLEAR'
             @list.clear
           when 'CREATE'
-            # TODO
-            @logger.log("EVENT: create with args: #{input[:args]}")
-            Reddwatch::List.new({name: input[:args]})
+            name = input[:args].first
+            @logger.log("EVENT: create with args: #{name}")
+            begin
+              l = Reddwatch::List.create({name: name})
+              @logger.log("EVENT: #{name} list created.") if l.exists?
+              l = nil
+            rescue Exception => e
+              @logger.log("ERROR: #{e}")
+            end
           when 'WATCH'
-            # TODO
-            @logger.log("EVENT: watch with args: #{input[:args]}")
-            @list = Reddwatch::List.new({name: input[:args]})
-            # restart Processor::Base with the new list
+            name = input[:args].first
+            @logger.log("EVENT: watch with args: #{name}")
+            @list = Reddwatch::List.new({name: name})
+            restart({watch: name})
           when 'DELETE'
-            # TODO
-            @logger.log("EVENT: delete with args: #{input[:args]}")
-            if @list.name.eql? input[:args] then
-              @list.delete
-              @list = nil
-              # restart/pause Processor::Base with the new list
+            name = input[:args].first
+            @logger.log("EVENT: delete with args: #{name}")
+            unless name.eql? Reddwatch::DEFAULT_WATCH_LIST then
+              if @list.name.eql? name then
+                @list = @list.delete
+                if @list.nil?
+                  @list = Reddwatch::List.new({name: Reddwatch::DEFAULT_WATCH_LIST})
+                  restart({watch: Reddwatch::DEFAULT_WATCH_LIST})
+                end
+              else
+                Reddwatch::List.delete({name: name})
+              end
             else
-              Reddwatch::List.new({name: input[:args]}).delete
+              @logger.log("ERROR: can't delete the default list.")
             end
           when 'LLIST'
             results = @list.llist
@@ -104,12 +118,10 @@ module Reddwatch
             sleep 0.5 until fifo_locked?
             unlock_fifo
           when 'RESTART'
-            begin
-              @logger.log('EVENT: server.rb::restart')
-              Thread.new { @processor.restart(@watching) }
-            rescue Exception => e
-              @logger.log("ERROR: #{e}")
-            end
+            @list = Reddwatch::List.new({name: @watching})
+            restart({watch: @watching})
+          when 'FULLRESTART'
+            # TODO: shutdown server and re run
           end
         end
       else
@@ -179,6 +191,28 @@ module Reddwatch
       def clean_shutdown
         @fifo.close
         File.delete(Reddwatch::PID_FILE)
+      end
+      
+      def restart(options)
+        begin
+          @logger.log('EVENT: restarting Processor::Base.run from server.')
+          Thread.new { @processor.restart({watch: options[:watch]}) }
+
+          msg = {
+            title: "#{Reddwatch::APP_NAME} - Status",
+            content: "Restarting #{Reddwatch::APP_NAME}...\nWatching #{@list.name} list.",
+            level: 'dialog-info'
+          }
+          @notifier.send(msg)
+        rescue Exception => e
+          @logger.log("ERROR: #{e}")
+        end
+      end
+
+      # TODO: figure out if a daemon process can restart itself
+      def full_restart
+        pid = File.open(Reddwatch::PID_FILE, 'r').readline.strip.to_i
+        Process.kill("KILL", pid)
       end
   end
 end

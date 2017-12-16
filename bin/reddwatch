@@ -54,7 +54,7 @@ OptionParser.new do |o|
     opts[:watch] = w
   end
 
-  o.on("-D", "--delete-list", "Delete named list.") do |d|
+  o.on("-D", "--delete-list NAME", "Delete named list.") do |d|
     opts[:delete] = d
   end
 

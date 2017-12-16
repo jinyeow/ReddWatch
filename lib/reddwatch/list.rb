@@ -62,21 +62,53 @@ module Reddwatch
       save_list(@subs)
     end
 
-    # Deletes the list
-    def delete
-      File.delete("#{@list_dir}/#{@name}.list")
-      unless File.exists? "#{@list_dir}/#{@name}.list" then
-        @subs = nil
-        @name = nil
-      end
-    end
-
     def name
       @name
     end
 
+    def delete
+      File.delete("#{@list_dir}/#{@name}.list")
+
+      unless File.exists? "#{@list_dir}/#{@name}.list" then
+        @logger.log("EVENT: #{@name} list deleted.")
+        @subs = nil
+        @name = nil
+        return nil
+      else
+        @logger.log("ERROR: could not delete #{@name} list.")
+        return self
+      end
+
+    end
+
     def dir
       @list_dir
+    end
+
+    def exists?
+      return true if File.exists? "#{@list_dir}/#{@name}.list"
+      return false
+    end
+
+    # Creates an empty list
+    def self.create(options)
+      list_dir = options[:list_dir] || Reddwatch::DEFAULT_LIST_DIR
+      File.open("#{list_dir}/#{options[:name]}.list", 'w') {}
+      new(options) # NOTE: is this needed?
+    end
+
+    # Deletes the list
+    def self.delete(options)
+      list_dir = options[:list_dir] || Reddwatch::DEFAULT_LIST_DIR
+      name = options[:name]
+
+      File.delete("#{list_dir}/#{name}.list")
+
+      unless File.exists? "#{list_dir}/#{name}.list" then
+        Reddwatch::Logger.log("EVENT: #{name} list deleted.")
+      else
+        Reddwatch::Logger.log("ERROR: could not delete #{name} list.")
+      end
     end
 
     private
@@ -90,11 +122,10 @@ module Reddwatch
         list = "#{@list_dir}/#{@name}.list"
         
         if File.exists? list then
-          f = File.open(list, 'r')
-          f.readlines.map { |l| l.strip }
+          File.open(list, 'r').readlines.map(&:strip)
         else
-          File.open(list, 'w') {}
-          []
+          @logger.log("ERROR: '#{@name}' list does not exist.")
+          return nil
         end
       end
   end

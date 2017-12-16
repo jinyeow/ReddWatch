@@ -24,7 +24,7 @@ module Reddwatch
 
       def initialize(opts = {})
         @options  = opts
-        @list     = @options[:list]
+        @list     = List.new({name: @options[:watch]})
 
         @logger   = Reddwatch::Logger
         @reddit   = Reddwatch::Feed::Reddit.new
@@ -35,7 +35,7 @@ module Reddwatch
 
       def run
         @logger.log("EVENT: ReddWatch started.")
-        list = get_list(@list)
+        list = @list.list
 
         feed   = @reddit.fetch(list.join('+'))
 
@@ -101,24 +101,13 @@ module Reddwatch
         @notifier.send(msg)
       end
 
-      def restart(watching)
+      def restart(opts)
+        @options = opts
         @running = false
         @logger.log("EVENT: Reddwatch stopped.")
         @logger.log("EVENT: restarting server...")
-        @list = watching
+        @list = List.new({name: @options[:watch]})
         run
-      end
-
-      # TODO: instead of using this use a List object to get the subs
-      def get_list(list)
-        unless File.exists? "#{Reddwatch::DEFAULT_LIST_DIR}/#{list}"
-          @logger.log("ERROR: '#{list}' list does not exist.")
-          exit(1)
-        end
-
-        open("#{Reddwatch::DEFAULT_LIST_DIR}/#{list}", 'r').readlines.map do |line|
-          line.strip
-        end
       end
     end
   end
