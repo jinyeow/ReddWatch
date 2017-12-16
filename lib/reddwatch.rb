@@ -26,7 +26,6 @@ module Reddwatch
   DEFAULT_PROCESSOR   = 'Base'
 
   PID_FILE            = '/tmp/reddwatch.pid'
-  # FIFO_FILE           = '/tmp/reddwatch.fifo'
 
   def self.init
     puts "[*] Initialising #{APP_NAME}!!"
