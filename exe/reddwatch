@@ -58,6 +58,10 @@ OptionParser.new do |o|
     opts[:delete] = d
   end
 
+  o.on("-P", "--print-list", "Print the currently watched list.") do
+    opts[:print] = true
+  end
+
   o.separator ""
 
   o.on("-l", "--list-watching", "List all subreddits in the current list.") do

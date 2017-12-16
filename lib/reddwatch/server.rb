@@ -67,10 +67,7 @@ module Reddwatch
             end
           when 'LIST'
             @logger.log("EVENT: list result is: #{@list.list.join(",")}")
-            unlock_fifo
-            write_fifo("#{@list.list.join(",")}")
-            sleep 0.5 until fifo_locked?
-            unlock_fifo
+            reply_fifo_and_wait("#{@list.list.join(",")}")
           when 'UNSUBSCRIBE'
             @logger.log("EVENT: unsubscribe with args: #{input[:args]}")
             if @list.remove(input[:args]) then
@@ -113,15 +110,16 @@ module Reddwatch
           when 'LLIST'
             results = @list.llist
             @logger.log("EVENT: llist result is: #{results.join(",")}")
-            unlock_fifo
-            write_fifo("#{results.join(",")}")
-            sleep 0.5 until fifo_locked?
-            unlock_fifo
+            reply_fifo_and_wait("#{results.join(",")}")
           when 'RESTART'
             @list = Reddwatch::List.new({name: @watching})
             restart({watch: @watching})
           when 'FULLRESTART'
             # TODO: shutdown server and re run
+          when 'PRINT'
+            results = @list.name
+            @logger.log("EVENT: print result is #{results}")
+            reply_fifo_and_wait(results)
           end
         end
       else
@@ -186,6 +184,13 @@ module Reddwatch
 
       def fifo_locked?
         @fifo.locked?
+      end
+
+      def reply_fifo_and_wait(msg)
+        unlock_fifo
+        write_fifo(msg)
+        sleep 0.5 until fifo_locked?
+        unlock_fifo
       end
 
       def clean_shutdown

@@ -15,7 +15,7 @@ module Reddwatch
     end
 
     def run
-      %w(start stop status subscribe list unsubscribe clear llist create watch delete restart).each do |s|
+      %w(start stop status subscribe list unsubscribe clear llist create watch delete restart print).each do |s|
         if @options[s.to_sym] then
           @logger.log("EVENT: in client##{s}.")
           send(s)
@@ -41,11 +41,8 @@ module Reddwatch
 
     def list
       write_fifo('LIST')
-      lock_fifo
-      sleep 0.5 while fifo_locked?
-      results = read_fifo.gsub(',', "\n")
+      results = wait_fifo_reply_and_lock.gsub(',', "\n")
       puts "#{results}"
-      lock_fifo
     end
 
     def unsubscribe
@@ -58,11 +55,8 @@ module Reddwatch
 
     def llist
       write_fifo('LLIST')
-      lock_fifo
-      sleep 0.5 while fifo_locked?
-      results = read_fifo.gsub(',', "\n")
+      results = wait_fifo_reply_and_lock.gsub(',', "\n")
       puts "#{results}"
-      lock_fifo
     end
 
     def create
@@ -79,6 +73,12 @@ module Reddwatch
 
     def restart
       write_fifo('RESTART')
+    end
+
+    def print
+      write_fifo('PRINT')
+      results = wait_fifo_reply_and_lock
+      puts results
     end
 
     private
@@ -101,6 +101,14 @@ module Reddwatch
 
       def unlock_fifo
         @fifo.unlock
+      end
+
+      def wait_fifo_reply_and_lock
+        lock_fifo
+        sleep 0.5 while fifo_locked?
+        results = read_fifo
+        lock_fifo
+        return "#{results}"
       end
   end
 end
