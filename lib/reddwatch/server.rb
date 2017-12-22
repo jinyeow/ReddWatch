@@ -15,6 +15,7 @@ module Reddwatch
     def initialize(options={})
       @options   = options
 
+      # TODO: swap FIFO for Socket
       @fifo      = Reddwatch::FIFO.new
       @logger    = Reddwatch::Logger
       @notifier  = Reddwatch::Notifier::LibNotify.new
