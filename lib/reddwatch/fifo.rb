@@ -1,5 +1,3 @@
-require 'reddwatch'
-
 module Reddwatch
   class FIFO
     LOCK_FILE = '/tmp/reddwatch-fifo.locked'
