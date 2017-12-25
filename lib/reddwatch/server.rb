@@ -2,11 +2,20 @@ require 'reddwatch'
 
 module Reddwatch
   class Server
+    SERVER_FILE = '/tmp/reddwatch.server'
+
     def self.start
       begin
-        new().run
+        unless File.exists? SERVER_FILE
+          File.open(SERVER_FILE, 'w') {}
+          new().run
+        else
+          Reddwatch::Logger.log("DEBUG: Server already exists.")
+          puts 'ReddWatch Server already up and running.'
+        end
       rescue Exception => e
         File.delete(Reddwatch::PID_FILE) if File.exists? Reddwatch::PID_FILE
+        File.delete(SERVER_FILE) if File.exists? SERVER_FILE
         Reddwatch::Logger.log("ERROR: Server DIED :: #{e}")
         puts e.backtrace
       end
@@ -69,7 +78,7 @@ module Reddwatch
         when 'STOP'
           running = false
           @processor.stop
-          close_fifo
+          clean_shutdown
         when 'STATUS'
           @processor.status
         when 'SUBSCRIBE'
@@ -176,7 +185,7 @@ module Reddwatch
 
       def close_fifo
         @fifo.close
-        @logger.log('EVENT: closed fifo.')
+        @logger.log('DEBUG: closed fifo.')
       end
 
       def lock_fifo
@@ -199,8 +208,13 @@ module Reddwatch
       end
 
       def clean_shutdown
-        @fifo.close
-        File.delete(Reddwatch::PID_FILE)
+        close_fifo
+        delete_if_exists(Reddwatch::PID_FILE)
+        delete_if_exists(SERVER_FILE)
+      end
+
+      def delete_if_exists(file)
+        File.delete(file) if File.exists? file
       end
       
       def restart(options)
