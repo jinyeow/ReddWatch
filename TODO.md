@@ -1,10 +1,8 @@
 # TODO
 
-Updated at: 15:19 25/12/17
+Updated at: 16:12 25/12/17
 
 * Use UNIXServer/UNIXSockets to communicate
-* Use File.flock to ensure only 1 server is running at any time.
-* Add code so that --server doesn't try to run if a server already exists.
 * Use TOML for the config file
 * Add how to get client-id/secret to README.md to get the gem working.
 * Update 'Usage' in README.md
