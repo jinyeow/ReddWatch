@@ -1,7 +1,10 @@
 # TODO
 
-Updated at: 16:12 25/12/17
+Updated at: 23:30 25/12/17
 
+* Test out the new placement of the fifo.sync/desync around the client writes and
+  check that it prevents the race condition of a write being read as a reply.
+* Add tests
 * Use UNIXServer/UNIXSockets to communicate
 * Use TOML for the config file
 * Add how to get client-id/secret to README.md to get the gem working.

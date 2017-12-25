@@ -17,8 +17,13 @@ module Reddwatch
     def run
       %w(start stop status subscribe list unsubscribe clear llist create watch delete restart print).each do |s|
         if @options[s.to_sym] then
-          @logger.log("EVENT: in client##{s}.")
+          @logger.log("DEBUG: in client##{s}.")
+
+          # NOTE: added FIFO#sync and FIFO#desync here to try to ensure only 1 client can
+          #       write at a time.
+          loop { break if @fifo.sync }
           send(s)
+          @fifo.desync
         end
       end
     end
@@ -40,7 +45,6 @@ module Reddwatch
     end
 
     def list
-      # write_fifo('LIST')
       results = wait_fifo_reply_and_lock('LIST').gsub(',', "\n")
       puts "#{results}"
     end
@@ -54,7 +58,6 @@ module Reddwatch
     end
 
     def llist
-      # write_fifo('LLIST')
       results = wait_fifo_reply_and_lock('LLIST').gsub(',', "\n")
       puts "#{results}"
     end
@@ -76,7 +79,6 @@ module Reddwatch
     end
 
     def print
-      # write_fifo('PRINT')
       results = wait_fifo_reply_and_lock('PRINT')
       puts results
     end
@@ -104,13 +106,13 @@ module Reddwatch
       end
 
       def wait_fifo_reply_and_lock(cmd)
-        loop { break if @fifo.sync }
+        # loop { break if @fifo.sync }
         write_fifo(cmd)
         lock_fifo
         sleep 0.5 while fifo_locked?
         results = read_fifo
         lock_fifo
-        @fifo.desync
+        # @fifo.desync
         return "#{results}"
       end
   end

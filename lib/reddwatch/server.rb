@@ -6,6 +6,10 @@ module Reddwatch
 
     def self.start
       begin
+        # NOTE: alternatively, instead of checking file existence, lock the SERVER_FILE with
+        #       File.flock(File::LOCK_EX|File::LOCK_NB) and check the lock status.
+        #       If it is locked File.flock will return false with File::LOCK_NB.
+        #       e.g. f = File.open(SERVER_FILE, 'r'); if (not f.flock(File::LOCK_EX | File::LOCK_NB) ...
         unless File.exists? SERVER_FILE
           File.open(SERVER_FILE, 'w') {}
           new().run
@@ -47,12 +51,22 @@ module Reddwatch
 
         while running do
           cmd = read_fifo
-          @logger.log("DEBUG: fifo read #{cmd}.")
 
-          input = parse_cmd(cmd)
-          @logger.log("DEBUG: #{pp input}")
+          # NOTE: This should prevent server death because cmd was read by another client.
+          #       Hhowever, the problem still exists where one client is mistakenly reading
+          #       the cmd written by another.
+          #       I believe the problem happens when the 'lock' is released by the Server and
+          #       the Client believes that a reply is ready but another client overwrites or
+          #       writes to the FIFO such that the first Client reads that write as a reply.
+          #       The solution then is to ensure that only one client at a time can access the FIFO.
+          unless cmd.nil? or cmd.empty?
+            @logger.log("DEBUG: fifo read #{cmd}.")
 
-          process_cmd(input[:cmd], input[:args])
+            input = parse_cmd(cmd)
+            @logger.log("DEBUG: #{pp input}")
+
+            process_cmd(input[:cmd], input[:args])
+          end
         end
       else
         clean_shutdown
