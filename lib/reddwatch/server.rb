@@ -28,108 +28,112 @@ module Reddwatch
     def run
       daemonize and running = true
 
-      msg = {
-        title: "#{Reddwatch::APP_NAME} - Status",
-        content: "Starting #{Reddwatch::APP_NAME}...",
-        level: 'dialog-info'
-      }
-      @notifier.send(msg)
+      notify_status("Starting #{Reddwatch::APP_NAME}...")
 
       if running then
-        msg[:content] = "Startup complete."
-        @notifier.send(msg)
+        notify_status("Startup complete.")
 
         Thread.new { @processor.run }
 
         while running do
           cmd = read_fifo
-          @logger.log("EVENT: fifo read #{cmd}.")
+          @logger.log("DEBUG: fifo read #{cmd}.")
 
           input = parse_cmd(cmd)
+          @logger.log("DEBUG: #{pp input}")
 
-          @logger.log("EVENT: caught #{input[:cmd]}.")
-
-          case input[:cmd]
-          when 'START'
-            Thread.new { @processor.run }
-            running = true
-          when 'STOP'
-            running = false
-            @processor.stop
-            close_fifo
-          when 'STATUS'
-            @processor.status
-          when 'SUBSCRIBE'
-            @logger.log("EVENT: subscribe with args: #{input[:args]}")
-            if @list.add(input[:args]) then
-              @logger.log("EVENT: subscribed to #{input[:args].join(',')}")
-              restart({watch: @list.name})
-            end
-          when 'LIST'
-            @logger.log("EVENT: list result is: #{@list.list.join(",")}")
-            reply_fifo_and_wait("#{@list.list.join(",")}")
-          when 'UNSUBSCRIBE'
-            @logger.log("EVENT: unsubscribe with args: #{input[:args]}")
-            if @list.remove(input[:args]) then
-              @logger.log('EVENT: unsubscribe successful.')
-              restart({watch: @list.name})
-            end
-          when 'CLEAR'
-            @list.clear
-          when 'CREATE'
-            name = input[:args].first
-            @logger.log("EVENT: create with args: #{name}")
-            begin
-              l = Reddwatch::List.create({name: name})
-              @logger.log("EVENT: #{name} list created.") if l.exists?
-              l = nil
-            rescue Exception => e
-              @logger.log("ERROR: #{e}")
-            end
-          when 'WATCH'
-            name = input[:args].first
-            @logger.log("EVENT: watch with args: #{name}")
-            @list = Reddwatch::List.new({name: name})
-            restart({watch: name})
-          when 'DELETE'
-            name = input[:args].first
-            @logger.log("EVENT: delete with args: #{name}")
-            unless name.eql? Reddwatch::DEFAULT_WATCH_LIST then
-              if @list.name.eql? name then
-                @list = @list.delete
-                if @list.nil?
-                  @list = Reddwatch::List.new({name: Reddwatch::DEFAULT_WATCH_LIST})
-                  restart({watch: Reddwatch::DEFAULT_WATCH_LIST})
-                end
-              else
-                Reddwatch::List.delete({name: name})
-              end
-            else
-              @logger.log("ERROR: can't delete the default list.")
-            end
-          when 'LLIST'
-            results = @list.llist
-            @logger.log("EVENT: llist result is: #{results.join(",")}")
-            reply_fifo_and_wait("#{results.join(",")}")
-          when 'RESTART'
-            @list = Reddwatch::List.new({name: @watching})
-            restart({watch: @watching})
-          when 'FULLRESTART'
-            # TODO: shutdown server and re run
-          when 'PRINT'
-            results = @list.name
-            @logger.log("EVENT: print result is #{results}")
-            reply_fifo_and_wait(results)
-          end
+          process_cmd(input[:cmd], input[:args])
         end
       else
         clean_shutdown
-        msg[:content] = "Startup failed."
-        @notifier.send(msg)
+        notify_status("Startup failed.")
       end
     end
 
     private
+
+      def notify_status(msg)
+        @notifier.send({
+          title: "#{Reddwatch::APP_NAME} - Status",
+          content: "#{msg}",
+          level: 'dialog-info'
+        })
+      end
+      
+      def process_cmd(cmd, args=nil)
+       case cmd
+        when 'START'
+          Thread.new { @processor.run }
+          running = true
+        when 'STOP'
+          running = false
+          @processor.stop
+          close_fifo
+        when 'STATUS'
+          @processor.status
+        when 'SUBSCRIBE'
+          @logger.log("DEBUG: subscribe with args: #{args}")
+          if @list.add(args) then
+            @logger.log("DEBUG: subscribed to #{args.join(',')}")
+            restart({watch: @list.name})
+          end
+        when 'LIST'
+          @logger.log("DEBUG: list result is: #{@list.list.join(",")}")
+          reply_fifo_and_wait("#{@list.list.join(",")}")
+        when 'UNSUBSCRIBE'
+          @logger.log("DEBUG: unsubscribe with args: #{args}")
+          if @list.remove(args) then
+            @logger.log('DEBUG: unsubscribe successful.')
+            restart({watch: @list.name})
+          end
+        when 'CLEAR'
+          @list.clear
+        when 'CREATE'
+          name = args.first
+          @logger.log("DEBUG: create with args: #{name}")
+          begin
+            l = Reddwatch::List.create({name: name})
+            @logger.log("DEBUG: #{name} list created.") if l.exists?
+            l = nil
+          rescue Exception => e
+            @logger.log("ERROR: #{e}")
+          end
+        when 'WATCH'
+          name = args.first
+          @logger.log("DEBUG: watch with args: #{name}")
+          @list = Reddwatch::List.new({name: name})
+          restart({watch: name})
+        when 'DELETE'
+          name = args.first
+          @logger.log("DEBUG: delete with args: #{name}")
+          unless name.eql? Reddwatch::DEFAULT_WATCH_LIST then
+            if @list.name.eql? name then
+              @list = @list.delete
+              if @list.nil?
+                @list = Reddwatch::List.new({name: Reddwatch::DEFAULT_WATCH_LIST})
+                restart({watch: Reddwatch::DEFAULT_WATCH_LIST})
+              end
+            else
+              Reddwatch::List.delete({name: name})
+            end
+          else
+            @logger.log("ERROR: can't delete the default list.")
+          end
+        when 'LLIST'
+          results = @list.llist
+          @logger.log("DEBUG: llist result is: #{results.join(",")}")
+          reply_fifo_and_wait("#{results.join(",")}")
+        when 'RESTART'
+          @list = Reddwatch::List.new({name: @watching})
+          restart({watch: @watching})
+        when 'FULLRESTART'
+          # TODO: shutdown server and re-run
+        when 'PRINT'
+          results = @list.name
+          @logger.log("DEBUG: print result is #{results}")
+          reply_fifo_and_wait(results)
+        end 
+      end
 
       # Taken from 'jstorimer.com/blogs/workingwithcode/7766093-daemon-processes-in-ruby'
       def daemonize
@@ -171,7 +175,7 @@ module Reddwatch
 
       def close_fifo
         @fifo.close
-        @logger.log('EVENT: deleted fifo.')
+        @logger.log('EVENT: closed fifo.')
       end
 
       def lock_fifo
@@ -202,13 +206,7 @@ module Reddwatch
         begin
           @logger.log('EVENT: restarting Processor::Base.run from server.')
           Thread.new { @processor.restart({watch: options[:watch]}) }
-
-          msg = {
-            title: "#{Reddwatch::APP_NAME} - Status",
-            content: "Restarting #{Reddwatch::APP_NAME}...\nWatching #{@list.name} list.",
-            level: 'dialog-info'
-          }
-          @notifier.send(msg)
+          notify_status("Restarting #{Reddwatch::APP_NAME}...\nWatching #{@list.name} list.")
         rescue Exception => e
           @logger.log("ERROR: #{e}")
         end
@@ -216,8 +214,6 @@ module Reddwatch
 
       # TODO: figure out if a daemon process can restart itself
       def full_restart
-        pid = File.open(Reddwatch::PID_FILE, 'r').readline.strip.to_i
-        Process.kill("KILL", pid)
       end
   end
 end
