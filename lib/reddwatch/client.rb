@@ -40,8 +40,8 @@ module Reddwatch
     end
 
     def list
-      write_fifo('LIST')
-      results = wait_fifo_reply_and_lock.gsub(',', "\n")
+      # write_fifo('LIST')
+      results = wait_fifo_reply_and_lock('LIST').gsub(',', "\n")
       puts "#{results}"
     end
 
@@ -54,8 +54,8 @@ module Reddwatch
     end
 
     def llist
-      write_fifo('LLIST')
-      results = wait_fifo_reply_and_lock.gsub(',', "\n")
+      # write_fifo('LLIST')
+      results = wait_fifo_reply_and_lock('LLIST').gsub(',', "\n")
       puts "#{results}"
     end
 
@@ -76,8 +76,8 @@ module Reddwatch
     end
 
     def print
-      write_fifo('PRINT')
-      results = wait_fifo_reply_and_lock
+      # write_fifo('PRINT')
+      results = wait_fifo_reply_and_lock('PRINT')
       puts results
     end
 
@@ -103,11 +103,14 @@ module Reddwatch
         @fifo.unlock
       end
 
-      def wait_fifo_reply_and_lock
+      def wait_fifo_reply_and_lock(cmd)
+        loop { break if @fifo.sync }
+        write_fifo(cmd)
         lock_fifo
         sleep 0.5 while fifo_locked?
         results = read_fifo
         lock_fifo
+        @fifo.desync
         return "#{results}"
       end
   end

@@ -8,6 +8,8 @@ module Reddwatch
       @options = options
 
       @fifo = options[:name] || '/tmp/reddwatch.fifo'
+
+      # NOTE: try File.mkfifo
       system("mkfifo #{@fifo}") unless File.exists? @fifo
 
       @output = open(@fifo, 'w+')
@@ -45,6 +47,14 @@ module Reddwatch
 
     def locked?
       File.exists? LOCK_FILE
+    end
+
+    def sync
+      @output.flock(File::LOCK_EX)
+    end
+
+    def desync
+      @output.flock(File::LOCK_UN)
     end
   end
 end
