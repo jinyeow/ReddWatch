@@ -1,6 +1,6 @@
 # TODO
 
-Updated at: 23:30 25/12/17
+Updated at: 22:21 27/12/17
 
 * Test out the new placement of the fifo.sync/desync around the client writes and
   check that it prevents the race condition of a write being read as a reply.
@@ -12,3 +12,5 @@ Updated at: 23:30 25/12/17
 * Consider having the --status command return a reply that is printed to stdout
   as well as the notification. Or a separate status command just for stdout.
 * Send me an e-mail at the start/end of each day/week of the most popular posts
+* figure out if a daemon process can restart itself
+
