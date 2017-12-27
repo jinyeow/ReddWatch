@@ -22,6 +22,11 @@ module Reddwatch
         File.delete(SERVER_FILE) if File.exists? SERVER_FILE
         Reddwatch::Logger.log("ERROR: Server DIED :: #{e}")
         puts e.backtrace
+        Reddwatch::Notifier::LibNotify.new.send({
+          title: "#{Reddwatch::APP_NAME} - Status",
+          content: "Server died: #{e}.",
+          level: 'dialog-info'
+        })
       end
     end
 
@@ -40,16 +45,16 @@ module Reddwatch
     end
 
     def run
-      daemonize and running = true
+      daemonize and @running = true
 
       notify_status("Starting #{Reddwatch::APP_NAME}...")
 
-      if running then
+      if @running then
         notify_status("Startup complete.")
 
         Thread.new { @processor.run }
 
-        while running do
+        while @running do
           cmd = read_fifo
 
           # NOTE: This should prevent server death because cmd was read by another client.
@@ -85,12 +90,12 @@ module Reddwatch
       end
       
       def process_cmd(cmd, args=nil)
-       case cmd
+        case cmd
         when 'START'
           Thread.new { @processor.run }
-          running = true
+          @running = true
         when 'STOP'
-          running = false
+          @running = false
           @processor.stop
           clean_shutdown
         when 'STATUS'
