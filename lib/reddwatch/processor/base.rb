@@ -94,11 +94,10 @@ module Reddwatch
           level: 'dialog-info'
         }
 
-        if File.exists? Reddwatch::PID_FILE then
-          msg[:content] = "Running..."
-        end
+        msg[:content] = "Running..." if File.exist? Reddwatch::PID_FILE
 
         @notifier.send(msg)
+        return msg[:content].split('.').first.downcase
       end
 
       def restart(opts)

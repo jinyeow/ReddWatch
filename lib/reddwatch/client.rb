@@ -9,111 +9,89 @@ module Reddwatch
     def initialize(options={})
       @options = options
 
-      @fifo     = Reddwatch::FIFO.new
+      @sock     = Reddwatch::Socket.new
       @logger   = Reddwatch::Logger
       @notifier = Reddwatch::Notifier::LibNotify.new
     end
 
     def run
-      %w(start stop status subscribe list unsubscribe clear llist create watch delete restart print).each do |s|
+      %w( start stop status subscribe list unsubscribe clear llist create watch
+          delete restart print).each do |s|
         if @options[s.to_sym] then
           @logger.log("DEBUG: in client##{s}.")
-
-          # NOTE: added FIFO#sync and FIFO#desync here to try to ensure only 1 client can
-          #       write at a time.
-          loop { break if @fifo.sync }
           send(s)
-          @fifo.desync
         end
       end
     end
 
     def start
-      write_fifo('START')
+      write('START')
     end
 
     def stop
-      write_fifo('STOP')
-    end
-
-    def status
-      write_fifo('STATUS')
+      write('STOP')
     end
 
     def subscribe
-      write_fifo("SUBSCRIBE #{@options[:subscribe].join(',')}")
-    end
-
-    def list
-      results = wait_fifo_reply_and_lock('LIST').gsub(',', "\n")
-      puts "#{results}"
+      write("SUBSCRIBE #{@options[:subscribe].join(',')}")
     end
 
     def unsubscribe
-      write_fifo("UNSUBSCRIBE #{@options[:unsubscribe].join(',')}")
+      write("UNSUBSCRIBE #{@options[:unsubscribe].join(',')}")
     end
 
     def clear
-      write_fifo('CLEAR')
-    end
-
-    def llist
-      results = wait_fifo_reply_and_lock('LLIST').gsub(',', "\n")
-      puts "#{results}"
+      write('CLEAR')
     end
 
     def create
-      write_fifo("CREATE #{@options[:create]}")
+      write("CREATE #{@options[:create]}")
     end
 
     def watch
-      write_fifo("WATCH #{@options[:watch]}")
+      write("WATCH #{@options[:watch]}")
     end
 
     def delete
-      write_fifo("DELETE #{@options[:delete]}")
+      write("DELETE #{@options[:delete]}")
     end
 
     def restart
-      write_fifo('RESTART')
+      write('RESTART')
+    end
+
+    def status
+      @logger.log 'before write'
+      write('STATUS')
+      @logger.log 'after write'
+      # This is blocking somehow
+      res = read
+      puts res
+    end
+
+    def list
+      write('LIST')
+      puts read.gsub(',', "\n")
+    end
+
+    def llist
+      write('LLIST')
+      puts read.gsub(',', "\n")
     end
 
     def print
-      results = wait_fifo_reply_and_lock('PRINT')
-      puts results
+      write('PRINT')
+      puts read
     end
 
     private
       
-      def write_fifo(cmd)
-        @fifo.write(cmd)
+      def write(cmd)
+        @sock.write(cmd)
       end
 
-      def read_fifo
-        @fifo.read.strip
-      end
-
-      def fifo_locked?
-        @fifo.locked?
-      end
-
-      def lock_fifo
-        @fifo.lock
-      end
-
-      def unlock_fifo
-        @fifo.unlock
-      end
-
-      def wait_fifo_reply_and_lock(cmd)
-        # loop { break if @fifo.sync }
-        write_fifo(cmd)
-        lock_fifo
-        sleep 0.5 while fifo_locked?
-        results = read_fifo
-        lock_fifo
-        # @fifo.desync
-        return "#{results}"
+      def read
+        @sock.read
       end
   end
 end

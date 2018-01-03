@@ -22,6 +22,7 @@ module Reddwatch
     rescue StandardError => e
       File.delete(Reddwatch::PID_FILE) if File.exist? Reddwatch::PID_FILE
       File.delete(SERVER_FILE) if File.exist? SERVER_FILE
+      File.delete(SOCK_FILE) if File.exist? SOCK_FILE
       Reddwatch::Logger.log("ERROR: Server DIED :: #{e}")
       puts e.backtrace
       Reddwatch::Notifier::LibNotify.new.send(
@@ -34,8 +35,7 @@ module Reddwatch
     def initialize(options = {})
       @options   = options
 
-      # TODO: swap FIFO for Socket
-      @fifo      = Reddwatch::FIFO.new
+      @serv      = Reddwatch::SocketServer.new
       @logger    = Reddwatch::Logger
       @notifier  = Reddwatch::Notifier::LibNotify.new
 
@@ -55,26 +55,31 @@ module Reddwatch
 
         Thread.new { @processor.run }
 
-        while @running
-          cmd = read_fifo
+        # NOTE: See below for an example on how to implement my server loop.
+        # def handle_client(client)
+        #   message = client.gets
+        #   client.puts message
+        # end
+        # 
+        # server = UNIXServer.new("/tmp/myapp.sock")
+        # while client = server.accept?
+        #   spawn handle_client(client)
+        # end
+        while @running && (sock = @serv.accept)
+          @logger.log("DEBUG: sock #{pp sock}")
+          cmd = read(sock)
 
-          # NOTE: should prevent server death because cmd was read by another
-          #       client.
-          #       The problem still exists where one client is mistakenly
-          #       reading the cmd written by another.
-          #       I believe the problem happens when the 'lock' is released by
-          #       the Server and the Client believes that a reply is ready but
-          #       another client overwrites or writes to the FIFO such that the
-          #       first Client reads that write as a reply.
-          #       The solution then is to ensure that only one client at a time
-          #       can access the FIFO.
-          next if cmd.nil? || cmd.empty?
-          @logger.log("DEBUG: fifo read #{cmd}.")
+          @logger.log("DEBUG: read #{cmd}")
 
           input = parse_cmd(cmd)
           @logger.log("DEBUG: #{pp input}")
 
-          process_cmd(input[:cmd], input[:args])
+          result = process_cmd(input[:cmd], input[:args])
+          @logger.log("DEBUG: #{pp result}")
+
+          @logger.log('before reply')
+          reply(sock, result) if result.is_a? String
+          @logger.log('after reply')
         end
       else
         clean_shutdown
@@ -93,6 +98,7 @@ module Reddwatch
     end
 
     def process_cmd(cmd, args = nil)
+      res = nil
       case cmd
       when 'START'
         Thread.new { @processor.run }
@@ -102,7 +108,7 @@ module Reddwatch
         @processor.stop
         clean_shutdown
       when 'STATUS'
-        @processor.status
+        res = @processor.status
       when 'SUBSCRIBE'
         @logger.log("DEBUG: subscribe with args: #{args}")
         if @list.add(args)
@@ -111,7 +117,7 @@ module Reddwatch
         end
       when 'LIST'
         @logger.log("DEBUG: list result is: #{@list.list.join(',')}")
-        reply_fifo_and_wait(@list.list.join(','))
+        res = @list.list.join(',')
       when 'UNSUBSCRIBE'
         @logger.log("DEBUG: unsubscribe with args: #{args}")
         if @list.remove(args)
@@ -153,15 +159,16 @@ module Reddwatch
       when 'LLIST'
         results = @list.llist
         @logger.log("DEBUG: llist result is: #{results.join(',')}")
-        reply_fifo_and_wait(results.join(','))
+        res = results.join(',')
       when 'RESTART'
         @list = Reddwatch::List.new(name: @watching)
         restart(watch: @watching)
       when 'PRINT'
         results = @list.name
         @logger.log("DEBUG: print result is #{results}")
-        reply_fifo_and_wait(results)
+        res = results
       end
+      return res
     end
 
     # Taken from
@@ -191,44 +198,18 @@ module Reddwatch
       }
     end
 
-    def clear_fifo
-      @fifo.clear
+    def read(sock)
+      sock.read.strip
     end
 
-    def read_fifo
-      @fifo.read.strip
-    end
-
-    def write_fifo(cmd)
-      @fifo.write(cmd)
-    end
-
-    def close_fifo
-      @fifo.close
-      @logger.log('DEBUG: closed fifo.')
-    end
-
-    def lock_fifo
-      @fifo.lock
-    end
-
-    def unlock_fifo
-      @fifo.unlock
-    end
-
-    def fifo_locked?
-      @fifo.locked?
-    end
-
-    def reply_fifo_and_wait(msg)
-      unlock_fifo
-      write_fifo(msg)
-      sleep 0.5 until fifo_locked?
-      unlock_fifo
+    def reply(sock, msg)
+      Reddwatch::Logger.log('before write')
+      sock.write(msg)
+      Reddwatch::Logger.log('after write')
     end
 
     def clean_shutdown
-      close_fifo
+      @serv.close
       delete_if_exists(Reddwatch::PID_FILE)
       delete_if_exists(SERVER_FILE)
     end
