@@ -1,3 +1,5 @@
+require 'socket'
+
 require 'reddwatch/socket'
 
 module Reddwatch
@@ -5,7 +7,6 @@ module Reddwatch
     def initialize(name="/tmp/reddwatch.socket")
       @name = name
       @server = UNIXServer.new(@name)
-      @sockets = []
       # Loop to connect new clients in a separate thread
       # Thread.new { loop { sockets.push(serv.accept) } }
       #
@@ -21,14 +22,12 @@ module Reddwatch
     end
 
     def accept
-      @sockets << (sock = @server.accept)
-      sock
+      s = @server.accept
+      Reddwatch::Socket.new(s)
     end
 
     def close
-      # Do i need to add a @sockets.each(&:join) ??
-      @sockets.each(&:close)
-      @serv.close
+      @server.close
       File.delete @name if File.exist? @name
     end
   end

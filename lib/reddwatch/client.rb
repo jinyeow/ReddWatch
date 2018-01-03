@@ -22,6 +22,7 @@ module Reddwatch
           send(s)
         end
       end
+      clean_up
     end
 
     def start
@@ -87,11 +88,16 @@ module Reddwatch
     private
       
       def write(cmd)
+        @logger.log("DEBUG: write(#{cmd})")
         @sock.write(cmd)
       end
 
       def read
         @sock.read
+      end
+
+      def clean_up
+        @sock.close
       end
   end
 end

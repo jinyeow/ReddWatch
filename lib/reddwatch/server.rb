@@ -66,7 +66,6 @@ module Reddwatch
         #   spawn handle_client(client)
         # end
         while @running && (sock = @serv.accept)
-          @logger.log("DEBUG: sock #{pp sock}")
           cmd = read(sock)
 
           @logger.log("DEBUG: read #{cmd}")
@@ -75,11 +74,9 @@ module Reddwatch
           @logger.log("DEBUG: #{pp input}")
 
           result = process_cmd(input[:cmd], input[:args])
-          @logger.log("DEBUG: #{pp result}")
+          @logger.log("DEBUG: #{pp result}") unless result.nil?
 
-          @logger.log('before reply')
           reply(sock, result) if result.is_a? String
-          @logger.log('after reply')
         end
       else
         clean_shutdown
@@ -203,9 +200,7 @@ module Reddwatch
     end
 
     def reply(sock, msg)
-      Reddwatch::Logger.log('before write')
       sock.write(msg)
-      Reddwatch::Logger.log('after write')
     end
 
     def clean_shutdown

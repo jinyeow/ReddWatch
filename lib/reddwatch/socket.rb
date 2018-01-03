@@ -1,21 +1,19 @@
+require 'socket'
+
 require 'reddwatch'
 
 module Reddwatch
   class Socket
-    MAX_MSG_SIZE = 200
-
-    def initialize(name="/tmp/reddwatch.socket")
-      @sock = UNIXSocket.new(name)
+    def initialize(sock=nil, name="/tmp/reddwatch.socket")
+      @sock = sock || UNIXSocket.new(name)
     end
 
     def write(msg)
-      # @sock.puts msg
-      @sock.send msg, 0
+      @sock.write "#{msg}\n"
     end
 
     def read
-      # @sock.gets
-      @sock.recv MAX_MSG_SIZE
+      @sock.readline
     end
     
     def close
