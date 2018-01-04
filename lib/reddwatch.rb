@@ -1,21 +1,17 @@
-require "reddwatch/version"
-
-require 'forwardable'
-
 require 'json'
 
 require 'reddwatch/client'
-require 'reddwatch/fifo'
 require 'reddwatch/logger'
 require 'reddwatch/list'
 require 'reddwatch/server'
+require 'reddwatch/socket_server'
 require 'reddwatch/notifier/notifier'
 require 'reddwatch/processor/base'
 require 'reddwatch/feed/reddit'
+require "reddwatch/version"
+
 
 module Reddwatch
-  extend Forwardable
-
   APP_NAME            = 'ReddWatch'
 
   DEFAULT_CONFIG_DIR  = "#{Dir.home}/.reddwatch"
@@ -26,6 +22,8 @@ module Reddwatch
   DEFAULT_PROCESSOR   = 'Base'
 
   PID_FILE            = '/tmp/reddwatch.pid'
+
+  SOCK_FILE           = '/tmp/reddwatch.socket'
 
   def self.init
     puts "[*] Initialising #{APP_NAME}!!"
