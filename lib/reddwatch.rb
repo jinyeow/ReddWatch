@@ -1,7 +1,3 @@
-require "reddwatch/version"
-
-require 'forwardable'
-
 require 'json'
 
 require 'reddwatch/client'
@@ -12,10 +8,10 @@ require 'reddwatch/socket_server'
 require 'reddwatch/notifier/notifier'
 require 'reddwatch/processor/base'
 require 'reddwatch/feed/reddit'
+require "reddwatch/version"
+
 
 module Reddwatch
-  extend Forwardable
-
   APP_NAME            = 'ReddWatch'
 
   DEFAULT_CONFIG_DIR  = "#{Dir.home}/.reddwatch"

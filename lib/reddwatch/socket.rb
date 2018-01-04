@@ -4,7 +4,7 @@ require 'reddwatch'
 
 module Reddwatch
   class Socket
-    def initialize(sock=nil, name="/tmp/reddwatch.socket")
+    def initialize(sock=nil, name=Reddwatch::SOCK_FILE)
       @sock = sock || UNIXSocket.new(name)
     end
 

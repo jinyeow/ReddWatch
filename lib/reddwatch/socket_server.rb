@@ -4,7 +4,7 @@ require 'reddwatch/socket'
 
 module Reddwatch
   class SocketServer
-    def initialize(name="/tmp/reddwatch.socket")
+    def initialize(name=Reddwatch::SOCK_FILE)
       @name = name
       @server = UNIXServer.new(@name)
       # Loop to connect new clients in a separate thread

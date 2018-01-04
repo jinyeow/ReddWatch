@@ -1,6 +1,6 @@
 # TODO
 
-Updated at: 21:11 03/01/18
+Updated at: 11:22 04/01/18
 
 * Add tests
 * Use YAML/TOML for the config file
