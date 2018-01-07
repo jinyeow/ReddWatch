@@ -40,26 +40,26 @@ module Reddwatch
         feed   = @reddit.fetch(list.join('+'))
 
         # On startup show the newest 5 posts
-        feed.take(10).each do |post|
+        feed.take(10).reverse.each do |post|
           msg = @reddit.create_message(post)
           @notifier.send(msg)
           sleep(DEFAULT_WAIT_INTERVAL)
         end
 
-        last_checked = Time.now.utc.to_i
+        last_checked = feed.first.created_utc
         @running     = true
 
         # Main loop
         while @running do
-          @logger.log("DBEUG: created_utc: #{feed.first.created_utc} | last_checked: #{last_checked}")
-          feed.each do |post|
-            if post.created_utc > last_checked then
-              last_checked = Time.now.utc.to_f
+          feed.reverse.each do |post|
+          @logger.log(
+            "DBEUG: created_utc: #{post.created_utc} | last_checked: #{last_checked}"
+          )
+            if post.created_utc >= last_checked
+              last_checked = post.created_utc
               msg          = @reddit.create_message(post)
               @notifier.send(msg)
               sleep(DEFAULT_WAIT_INTERVAL)
-            else
-              break
             end
           end
 
