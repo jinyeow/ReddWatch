@@ -20,7 +20,7 @@ module Reddwatch
   module Processor
     class Base
       DEFAULT_WAIT_INTERVAL = 5.seconds # time between each post notification
-      DEFAULT_CHECK_TIME    = 5.minutes # time between each reddit fetch
+      DEFAULT_CHECK_TIME    = 1.minutes # time between each reddit fetch
 
       def initialize(opts = {})
         @options  = opts
@@ -40,21 +40,22 @@ module Reddwatch
         feed   = @reddit.fetch(list.join('+'))
 
         # On startup show the newest 5 posts
-        feed.take(5).each do |post|
+        feed.take(10).each do |post|
           msg = @reddit.create_message(post)
           @notifier.send(msg)
           sleep(DEFAULT_WAIT_INTERVAL)
         end
 
         last_checked = Time.now.utc.to_i
-
-        @running = true
+        @running     = true
 
         # Main loop
         while @running do
+          @logger.log("DBEUG: created_utc: #{feed.first.created_utc} | last_checked: #{last_checked}")
           feed.each do |post|
             if post.created_utc > last_checked then
-              msg = @reddit.create_message(post)
+              last_checked = Time.now.utc.to_f
+              msg          = @reddit.create_message(post)
               @notifier.send(msg)
               sleep(DEFAULT_WAIT_INTERVAL)
             else
@@ -64,7 +65,6 @@ module Reddwatch
 
           @logger.log('EVENT: fetching new posts.')
           t = Thread.new { feed = @reddit.fetch(list.join('+')) }
-          last_checked = Time.now.utc.to_i
           sleep(DEFAULT_CHECK_TIME)
           t.join
         end

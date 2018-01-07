@@ -1,7 +1,10 @@
 # TODO
 
-Updated at: 11:22 04/01/18
+Updated at: 21:32 07/01/18
 
+* Split Processor::Base#run into multiple methods. Especially the loop to fetch and
+    check.
+* Add a loop in Client to parse ALL the ARGS passed to Reddwatch
 * Add tests
 * Use YAML/TOML for the config file
 * Add how to get client-id/secret to README.md to get the gem working.
