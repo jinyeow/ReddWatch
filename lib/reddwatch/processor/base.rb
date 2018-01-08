@@ -46,18 +46,23 @@ module Reddwatch
           sleep(DEFAULT_WAIT_INTERVAL)
         end
 
-        last_checked = feed.first.created_utc
-        @running     = true
+        last_checked   = feed.first.created_utc
+        new_post_found = true # this is needed to prevent last_checked being updated
+                              # unneccesarily on every loop.
+        @running       = true
 
         # Main loop
         while @running do
+          last_checked += 1 if new_post_found
+          new_post_found = false
           feed.reverse.each do |post|
-          @logger.log(
-            "DBEUG: created_utc: #{post.created_utc} | last_checked: #{last_checked}"
-          )
+            @logger.log(
+              "DBEUG: created_utc: #{post.created_utc} | last_checked: #{last_checked}"
+            )
             if post.created_utc >= last_checked
-              last_checked = post.created_utc
-              msg          = @reddit.create_message(post)
+              last_checked   = post.created_utc
+              new_post_found = true
+              msg            = @reddit.create_message(post)
               @notifier.send(msg)
               sleep(DEFAULT_WAIT_INTERVAL)
             end
