@@ -78,6 +78,7 @@ module Reddwatch
           @logger.log("DEBUG: #{pp result}") unless result.nil?
 
           reply(sock, result) if result.is_a? String
+          Thread.pass
         end
       else
         clean_shutdown

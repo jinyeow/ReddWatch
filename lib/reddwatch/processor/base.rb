@@ -57,7 +57,7 @@ module Reddwatch
           new_post_found = false
           feed.reverse.each do |post|
             @logger.log(
-              "DBEUG: created_utc: #{post.created_utc} | last_checked: #{last_checked}"
+              "DEBUG: created_utc: #{post.created_utc} | last_checked: #{last_checked}"
             )
             if post.created_utc >= last_checked
               last_checked   = post.created_utc
@@ -72,6 +72,7 @@ module Reddwatch
           t = Thread.new { feed = @reddit.fetch(list.join('+')) }
           sleep(DEFAULT_CHECK_TIME)
           t.join
+          Thread.pass
         end
       end
 
