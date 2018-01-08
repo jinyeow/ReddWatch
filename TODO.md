@@ -1,13 +1,13 @@
 # TODO
 
-Updated at: 11:30 08/01/18
+Updated at: 12:00 08/01/18
 NOTE: use r/all to test the app because it gets updated with new posts regularly.
 
+* Add a loop in Client to parse ALL the ARGS passed to Reddwatch
 * Fix error where server dies when 'reddwatch --server' is called but a server already
     exists.
 * Split Processor::Base#run into multiple methods. Especially the loop to fetch and
     check.
-* Add a loop in Client to parse ALL the ARGS passed to Reddwatch
 * Add tests
 * Use YAML/TOML for the config file
 * Add how to get client-id/secret to README.md to get the gem working.
