@@ -66,6 +66,7 @@ module Reddwatch
         #   spawn handle_client(client)
         # end
         while @running && (sock = @serv.accept)
+          sleep 1
           cmd = read(sock)
 
           @logger.log("DEBUG: read #{cmd}")
