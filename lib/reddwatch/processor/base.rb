@@ -52,27 +52,36 @@ module Reddwatch
         @running       = true
 
         # Main loop
-        while @running do
-          last_checked += 1 if new_post_found
-          new_post_found = false
-          feed.reverse.each do |post|
-            @logger.log(
-              "DEBUG: created_utc: #{post.created_utc} | last_checked: #{last_checked}"
-            )
-            if post.created_utc >= last_checked
-              last_checked   = post.created_utc
-              new_post_found = true
-              msg            = @reddit.create_message(post)
-              @notifier.send(msg)
-              sleep(DEFAULT_WAIT_INTERVAL)
+        begin
+          while @running do
+            last_checked += 1 if new_post_found
+            new_post_found = false
+            feed.reverse.each do |post|
+              @logger.log(
+                "DEBUG: created_utc: #{post.created_utc} | last_checked: #{last_checked}"
+              )
+              if post.created_utc >= last_checked
+                last_checked   = post.created_utc
+                new_post_found = true
+                msg            = @reddit.create_message(post)
+                @notifier.send(msg)
+                sleep(DEFAULT_WAIT_INTERVAL)
+              end
             end
-          end
 
-          @logger.log('EVENT: fetching new posts.')
-          t = Thread.new { feed = @reddit.fetch(list.join('+')) }
-          sleep(DEFAULT_CHECK_TIME)
-          t.join
-          Thread.pass
+            @logger.log('EVENT: fetching new posts.')
+            t = Thread.new { feed = @reddit.fetch(list.join('+')) }
+            sleep(DEFAULT_CHECK_TIME)
+            t.join
+            Thread.pass
+          end
+        rescue Exception => e
+          @logger.log("DEBUG: #{e}")
+          @logger.log("EVENT: getting new access_token.")
+          @reddit = Reddwatch::Feed::Reddit.new
+          @logger.log("EVENT: new Reddit session started.")
+          @logger.log("EVENT: retry-ing 'Main loop'.")
+          retry
         end
       end
 
