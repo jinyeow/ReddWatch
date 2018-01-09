@@ -9,7 +9,6 @@ module Reddwatch
     def initialize(options={})
       @options = options
 
-      @sock     = Reddwatch::Socket.new
       @logger   = Reddwatch::Logger
       @notifier = Reddwatch::Notifier::LibNotify.new
     end
@@ -19,6 +18,11 @@ module Reddwatch
           delete restart print).each do |s|
         if @options[s.to_sym] then
           @logger.log("DEBUG: in client##{s}.")
+
+          # Create a new socket for each command.
+          # This fixes the issue where the client would stall because the server
+          # was waiting for a new socket connection before reading the command.
+          @sock = Reddwatch::Socket.new
           send(s)
         end
       end

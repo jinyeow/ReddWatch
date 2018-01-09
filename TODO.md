@@ -1,6 +1,6 @@
 # TODO
 
-Updated at: 12:00 08/01/18
+Updated at: 16:30 09/01/18
 NOTE: use r/all to test the app because it gets updated with new posts regularly.
 
 * Add a loop in Client to parse ALL the ARGS passed to Reddwatch
