@@ -9,7 +9,6 @@ module Reddwatch
     def initialize(options={})
       @options = options
 
-      @sock     = Reddwatch::Socket.new
       @logger   = Reddwatch::Logger
       @notifier = Reddwatch::Notifier::LibNotify.new
     end
@@ -19,6 +18,7 @@ module Reddwatch
           delete restart print).each do |s|
         if @options[s.to_sym] then
           @logger.log("DEBUG: in client##{s}.")
+          @sock = Reddwatch::Socket.new
           send(s)
         end
       end
